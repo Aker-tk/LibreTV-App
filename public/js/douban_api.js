@@ -17,8 +17,8 @@ function getRandomUserAgent() {
 async function fetchDoubanChartTopList(genreName, params = {}) {
   const genreId = DOUBAN_CHART_GENRE_IDS[genreName];
   if (typeof genreId === "undefined") {
-    console.error(`[Douban API] Unknown genre name for chart: ${genreName}`);
-    return { subjects: [], error: { msg: `Unknown genre name: ${genreName}` } };
+    console.error("[Douban API] Unknown genre name for chart: ".concat(genreName));
+    return { subjects: [], error: { msg: "Unknown genre name: ".concat(genreName) } };
   }
   const queryParams = new URLSearchParams();
   queryParams.append("type", genreId);
@@ -26,8 +26,8 @@ async function fetchDoubanChartTopList(genreName, params = {}) {
   queryParams.append("action", params.action || "");
   queryParams.append("start", params.start || 0);
   queryParams.append("limit", params.limit || 20);
-  const urlToFetch = `https://movie.douban.com/j/chart/top_list?${queryParams.toString()}`;
-  console.log(`[Douban API] Fetching chart top list for genre "${genreName}" (ID: ${genreId}): ${urlToFetch}`);
+  const urlToFetch = "https://movie.douban.com/j/chart/top_list?".concat(queryParams.toString());
+  console.log('[Douban API] Fetching chart top list for genre "'.concat(genreName, '" (ID: ').concat(genreId, "): ").concat(urlToFetch));
   const rawData = await fetchDoubanData(urlToFetch);
   if (Array.isArray(rawData)) {
     return { subjects: rawData };
@@ -36,7 +36,7 @@ async function fetchDoubanChartTopList(genreName, params = {}) {
   } else if (rawData && rawData.error) {
     return { subjects: [], error: rawData.error };
   }
-  console.warn(`[Douban API] Unexpected data format from chart top list for ${genreName}:`, rawData);
+  console.warn("[Douban API] Unexpected data format from chart top list for ".concat(genreName, ":"), rawData);
   return { subjects: [] };
 }
 async function fetchNewDoubanSearch(params = {}) {
@@ -51,29 +51,29 @@ async function fetchNewDoubanSearch(params = {}) {
     if (params.start) queryParams.append("start", params.start);
     if (params.genres) queryParams.append("genres", params.genres);
     if (params.countries) queryParams.append("countries", params.countries);
-    urlToFetch = `${DOUBAN_NEW_SEARCH_API_BASE}?${queryParams.toString()}`;
+    urlToFetch = "".concat(DOUBAN_NEW_SEARCH_API_BASE, "?").concat(queryParams.toString());
   }
-  console.log(`[Douban API] Fetching new search subjects: ${urlToFetch}`);
+  console.log("[Douban API] Fetching new search subjects: ".concat(urlToFetch));
   return fetchDoubanData(urlToFetch);
 }
 async function fetchDoubanData(url) {
-  const cacheKey = `douban_api_cache_${url}`;
+  const cacheKey = "douban_api_cache_".concat(url);
   try {
     const cachedItemRaw = sessionStorage.getItem(cacheKey);
     if (cachedItemRaw) {
       const cachedItem = JSON.parse(cachedItemRaw);
       if (cachedItem && cachedItem.timestamp && cachedItem.data) {
         if (Date.now() - cachedItem.timestamp < DOUBAN_API_CACHE_DURATION_MS) {
-          console.log(`[Douban API Cache] Using cached response for ${url}`);
+          console.log("[Douban API Cache] Using cached response for ".concat(url));
           return Promise.resolve(cachedItem.data);
         } else {
-          console.log(`[Douban API Cache] Cache expired for ${url}`);
+          console.log("[Douban API Cache] Cache expired for ".concat(url));
           sessionStorage.removeItem(cacheKey);
         }
       }
     }
   } catch (e) {
-    console.warn(`[Douban API Cache] Error reading from cache for ${url}:`, e);
+    console.warn("[Douban API Cache] Error reading from cache for ".concat(url, ":"), e);
     sessionStorage.removeItem(cacheKey);
   }
   console.log("[MY_APP_DEBUG_DOUBAN] fetchDoubanData called with URL (via Rust - no valid cache):", url);
@@ -93,7 +93,7 @@ async function fetchDoubanData(url) {
       timeout_secs: 20
     };
     if (attempt > 0) {
-      console.log(`[Douban API] Retrying request for ${url}, attempt ${attempt + 1}/${DOUBAN_API_MAX_RETRIES + 1}`);
+      console.log("[Douban API] Retrying request for ".concat(url, ", attempt ").concat(attempt + 1, "/").concat(DOUBAN_API_MAX_RETRIES + 1));
     } else {
       console.log("[MY_APP_DEBUG_DOUBAN] Invoking make_http_request with options:", JSON.stringify(requestOptions));
     }
@@ -107,7 +107,7 @@ async function fetchDoubanData(url) {
         return { subjects: [] };
       }
       const response = await tauriConstants.invoke("make_http_request", { options: requestOptions });
-      console.log(`[MY_APP_DEBUG_DOUBAN] Response from Rust command (Attempt ${attempt + 1}). Status:`, response.status);
+      console.log("[MY_APP_DEBUG_DOUBAN] Response from Rust command (Attempt ".concat(attempt + 1, "). Status:"), response.status);
       if (response.status >= 200 && response.status < 300) {
         try {
           let jsonData = JSON.parse(response.body);
@@ -123,16 +123,16 @@ async function fetchDoubanData(url) {
             try {
               const itemToCache = { timestamp: Date.now(), data: jsonData };
               sessionStorage.setItem(cacheKey, JSON.stringify(itemToCache));
-              console.log(`[Douban API Cache] Response for ${url} cached.`);
+              console.log("[Douban API Cache] Response for ".concat(url, " cached."));
             } catch (e) {
-              console.warn(`[Douban API Cache] Error saving to cache for ${url}:`, e);
+              console.warn("[Douban API Cache] Error saving to cache for ".concat(url, ":"), e);
             }
             return jsonData;
           } else if (isRateLimited) {
-            console.warn(`[MY_APP_DEBUG_DOUBAN] Douban rate limit detected for ${url} on attempt ${attempt + 1}.`, jsonData);
+            console.warn("[MY_APP_DEBUG_DOUBAN] Douban rate limit detected for ".concat(url, " on attempt ").concat(attempt + 1, "."), jsonData);
             if (attempt < DOUBAN_API_MAX_RETRIES) {
               const delayForThisAttempt = Math.min(INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt), MAX_SINGLE_RETRY_DELAY_MS);
-              console.log(`[Douban API] Rate limit. Waiting ${delayForThisAttempt}ms before retry ${attempt + 2}.`);
+              console.log("[Douban API] Rate limit. Waiting ".concat(delayForThisAttempt, "ms before retry ").concat(attempt + 2, "."));
               await new Promise((resolve) => setTimeout(resolve, delayForThisAttempt));
               continue;
             } else {
@@ -140,20 +140,20 @@ async function fetchDoubanData(url) {
               return { subjects: [], error: jsonData };
             }
           } else {
-            console.warn(`[MY_APP_DEBUG_DOUBAN] API response for ${url} (Attempt ${attempt + 1}) did not contain 'subjects' or 'tags' key, and not a rate limit. Normalizing. Response:`, jsonData);
+            console.warn("[MY_APP_DEBUG_DOUBAN] API response for ".concat(url, " (Attempt ").concat(attempt + 1, ") did not contain 'subjects' or 'tags' key, and not a rate limit. Normalizing. Response:"), jsonData);
             if (url.includes("search_tags")) return { tags: [] };
             return { subjects: [] };
           }
         } catch (parseError) {
-          console.error(`[MY_APP_DEBUG_DOUBAN] Failed to parse response body (Attempt ${attempt + 1}) from Rust as JSON. Error:`, parseError, "Body:", response.body);
+          console.error("[MY_APP_DEBUG_DOUBAN] Failed to parse response body (Attempt ".concat(attempt + 1, ") from Rust as JSON. Error:"), parseError, "Body:", response.body);
           if (url.includes("search_tags")) return { tags: [] };
           return { subjects: [] };
         }
       } else {
-        console.error(`[MY_APP_DEBUG_DOUBAN] Douban API request via Rust failed (Attempt ${attempt + 1}). Status: ${response.status}, Body: ${response.body.substring(0, 200)}`);
+        console.error("[MY_APP_DEBUG_DOUBAN] Douban API request via Rust failed (Attempt ".concat(attempt + 1, "). Status: ").concat(response.status, ", Body: ").concat(response.body.substring(0, 200)));
         if (attempt < DOUBAN_API_MAX_RETRIES) {
           const delayForThisAttempt = Math.min(INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt), MAX_SINGLE_RETRY_DELAY_MS);
-          console.log(`[Douban API] HTTP error. Waiting ${delayForThisAttempt}ms before retry ${attempt + 2}.`);
+          console.log("[Douban API] HTTP error. Waiting ".concat(delayForThisAttempt, "ms before retry ").concat(attempt + 2, "."));
           await new Promise((resolve) => setTimeout(resolve, delayForThisAttempt));
           continue;
         } else {
@@ -162,10 +162,10 @@ async function fetchDoubanData(url) {
         }
       }
     } catch (error) {
-      console.error(`[MY_APP_DEBUG_DOUBAN] Error invoking make_http_request (Attempt ${attempt + 1}) for URL:`, url, "Error:", error);
+      console.error("[MY_APP_DEBUG_DOUBAN] Error invoking make_http_request (Attempt ".concat(attempt + 1, ") for URL:"), url, "Error:", error);
       if (attempt < DOUBAN_API_MAX_RETRIES) {
         const delayForThisAttempt = Math.min(INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt), MAX_SINGLE_RETRY_DELAY_MS);
-        console.log(`[Douban API] Invoke/Network error. Waiting ${delayForThisAttempt}ms before retry ${attempt + 2}.`);
+        console.log("[Douban API] Invoke/Network error. Waiting ".concat(delayForThisAttempt, "ms before retry ").concat(attempt + 2, "."));
         await new Promise((resolve) => setTimeout(resolve, delayForThisAttempt));
         continue;
       } else {
@@ -174,34 +174,34 @@ async function fetchDoubanData(url) {
       }
     }
   }
-  console.error(`[Douban API] All retries failed for ${url}.`);
+  console.error("[Douban API] All retries failed for ".concat(url, "."));
   if (url.includes("search_tags")) return { tags: [], error: { msg: "All retries failed." } };
   return { subjects: [], error: { msg: "All retries failed." } };
 }
 function fetchDoubanTags() {
-  const movieTagsTarget = `https://movie.douban.com/j/search_tags?type=movie`;
+  const movieTagsTarget = "https://movie.douban.com/j/search_tags?type=movie";
   fetchDoubanData(movieTagsTarget).then((data) => {
     if (typeof movieTags !== "undefined") {
-      movieTags = data && data.tags && Array.isArray(data.tags) ? data.tags : [...defaultMovieTags];
+      movieTags = data && data.tags && Array.isArray(data.tags) ? data.tags : defaultMovieTags.slice();
       if (doubanMovieTvCurrentSwitch === "movie" && typeof renderDoubanTags === "function") renderDoubanTags();
     }
   }).catch((error) => {
     console.error("获取豆瓣电影标签失败：", error);
     if (typeof movieTags !== "undefined") {
-      movieTags = [...defaultMovieTags];
+      movieTags = defaultMovieTags.slice();
       if (doubanMovieTvCurrentSwitch === "movie" && typeof renderDoubanTags === "function") renderDoubanTags();
     }
   });
-  const tvTagsTarget = `https://movie.douban.com/j/search_tags?type=tv`;
+  const tvTagsTarget = "https://movie.douban.com/j/search_tags?type=tv";
   fetchDoubanData(tvTagsTarget).then((data) => {
     if (typeof tvTags !== "undefined") {
-      tvTags = data && data.tags && Array.isArray(data.tags) ? data.tags : [...defaultTvTags];
+      tvTags = data && data.tags && Array.isArray(data.tags) ? data.tags : defaultTvTags.slice();
       if (doubanMovieTvCurrentSwitch === "tv" && typeof renderDoubanTags === "function") renderDoubanTags();
     }
   }).catch((error) => {
     console.error("获取豆瓣电视剧标签失败：", error);
     if (typeof tvTags !== "undefined") {
-      tvTags = [...defaultTvTags];
+      tvTags = defaultTvTags.slice();
       if (doubanMovieTvCurrentSwitch === "tv" && typeof renderDoubanTags === "function") renderDoubanTags();
     }
   });

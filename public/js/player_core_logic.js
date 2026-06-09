@@ -107,8 +107,8 @@ function initializePageContent() {
 }
 function playEpisode(index) {
   if (index < 0 || index >= currentEpisodes.length) {
-    console.error(`无效的剧集索引: ${index}, 当前剧集数量: ${currentEpisodes.length}`);
-    if (typeof showToast === "function") showToast(`无效的剧集索引: ${index + 1}，当前剧集总数: ${currentEpisodes.length}`);
+    console.error("无效的剧集索引: ".concat(index, ", 当前剧集数量: ").concat(currentEpisodes.length));
+    if (typeof showToast === "function") showToast("无效的剧集索引: ".concat(index + 1, "，当前剧集总数: ").concat(currentEpisodes.length));
     return;
   }
   if (dp && dp.video && !dp.video.paused && !videoHasEnded) saveCurrentProgress();
@@ -120,7 +120,7 @@ function playEpisode(index) {
   const loadingContainer = document.getElementById("loading");
   if (loadingContainer) {
     loadingContainer.style.display = "flex";
-    loadingContainer.innerHTML = `<div class="loading-spinner"></div>`;
+    loadingContainer.innerHTML = '<div class="loading-spinner"></div>';
   }
   const urlToPlay = currentEpisodes[index];
   currentVideoUrl = urlToPlay;

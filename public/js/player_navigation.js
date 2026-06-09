@@ -42,7 +42,7 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0) {
     episodeIndex,
     sourceName,
     timestamp: Date.now(),
-    episodes: currentEpisodes && currentEpisodes.length > 0 ? [...currentEpisodes] : []
+    episodes: currentEpisodes && currentEpisodes.length > 0 ? currentEpisodes.slice() : []
     // Use global currentEpisodes
   };
   if (typeof addToViewingHistory === "function") {
@@ -50,7 +50,7 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0) {
   } else {
     console.warn("addToViewingHistory function not found.");
   }
-  const playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(videoTitleForHistory)}&index=${episodeIndex}&source=${encodeURIComponent(sourceName)}&source_code=${encodeURIComponent(sourceCode)}`;
+  const playerUrl = "player.html?url=".concat(encodeURIComponent(url), "&title=").concat(encodeURIComponent(videoTitleForHistory), "&index=").concat(episodeIndex, "&source=").concat(encodeURIComponent(sourceName), "&source_code=").concat(encodeURIComponent(sourceCode));
   showVideoPlayer(playerUrl);
 }
 function showVideoPlayer(url) {

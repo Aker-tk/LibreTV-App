@@ -1,3 +1,19 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
 console.log("douban_filters.js loaded");
 const doubanFilterOptions = {
   contentType: {
@@ -76,14 +92,14 @@ function createFilterButton(text, filterKey, filterValue, isActive, clickHandler
   button.textContent = text;
   button.dataset.filterKey = filterKey;
   button.dataset.filterValue = filterValue;
-  button.className = `px-3 py-1.5 text-sm font-medium rounded-md border transition-colors duration-200 ${isActive ? "bg-pink-600 text-white border-pink-500" : isSpecial ? "bg-green-600 hover:bg-green-700 text-white border-green-500" : "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:text-white"}`;
+  button.className = "px-3 py-1.5 text-sm font-medium rounded-md border transition-colors duration-200 ".concat(isActive ? "bg-pink-600 text-white border-pink-500" : isSpecial ? "bg-green-600 hover:bg-green-700 text-white border-green-500" : "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:text-white");
   button.onclick = clickHandler;
   return button;
 }
 function initDoubanFilterControls(containerId) {
   const container = document.getElementById(containerId);
   if (!container) {
-    console.error(`Filter container with id '${containerId}' not found.`);
+    console.error("Filter container with id '".concat(containerId, "' not found."));
     return;
   }
   container.innerHTML = "";
@@ -97,7 +113,7 @@ function initDoubanFilterControls(containerId) {
         const savedState = JSON.parse(savedStateRaw);
         if (savedState.mode === "oldApi" && savedState.filters) {
           const defaultOldFilters = { selectedContentType: "全部", selectedTheme: "", selectedRegion: "", apiType: "movie", apiTag: "热门", sort: "rank", start: 0 };
-          window.currentOldApiFilters = { ...defaultOldFilters, ...savedState.filters };
+          window.currentOldApiFilters = __spreadValues(__spreadValues({}, defaultOldFilters), savedState.filters);
           restoredOldFilters = true;
         }
       } catch (e) {
@@ -185,7 +201,7 @@ function initOldApiFilterUIWithMatchedButtons(containerId) {
     sort: "recommend",
     start: 0
   };
-  window.currentOldApiFilters = { ...defaultFilters, ...window.currentOldApiFilters };
+  window.currentOldApiFilters = __spreadValues(__spreadValues({}, defaultFilters), window.currentOldApiFilters);
   if (window.currentOldApiFilters.selectedContentType === "全部") {
     window.currentOldApiFilters.selectedContentType = "电影";
   }
@@ -211,7 +227,7 @@ function initOldApiFilterUIWithMatchedButtons(containerId) {
   const createOldApiButtonGroup = (label, options, currentSelectionInState, filterPropertyToUpdate, isPrimaryContentTypeGroup = false) => {
     const groupDiv = document.createElement("div");
     groupDiv.className = "mb-4";
-    groupDiv.innerHTML = `<h4 class="text-lg font-semibold text-gray-300 mb-2">${label}</h4>`;
+    groupDiv.innerHTML = '<h4 class="text-lg font-semibold text-gray-300 mb-2">'.concat(label, "</h4>");
     const buttonsDiv = document.createElement("div");
     buttonsDiv.className = "flex flex-wrap gap-2";
     options.forEach((opt) => {
@@ -254,17 +270,18 @@ function initOldApiFilterUIWithMatchedButtons(containerId) {
   const additionalTags = ["动画", "综艺", "纪录片", "短片"];
   let movieSpecificTags = ["热门", "最新", "经典", "豆瓣高分", "冷门佳片", "华语", "欧美", "韩国", "日本", "动作", "喜剧", "爱情", "科幻", "悬疑", "恐怖", "治愈", "剧情", "战争", "奇幻", "冒险", "犯罪", "惊悚", "家庭", "古装", "武侠", "音乐", "歌舞", "传记", "历史", "西部", "黑色电影", "情色", "灾难", "儿童"];
   let tvSpecificTags = ["热门", "最新", "经典", "美剧", "英剧", "韩剧", "日剧", "国产剧", "港剧", "日本动画"];
+  const uniqueTags = (items) => Array.from(new Set(items));
   let themeTags;
   if (effectiveApiTypeForSecondaryTags === "tv") {
-    themeTags = [.../* @__PURE__ */ new Set([...tvSpecificTags, ...additionalTags])];
+    themeTags = uniqueTags(tvSpecificTags.concat(additionalTags));
   } else {
-    themeTags = [.../* @__PURE__ */ new Set([...movieSpecificTags, ...additionalTags])];
+    themeTags = uniqueTags(movieSpecificTags.concat(additionalTags));
   }
-  let displayableThemeTags = [...themeTags];
+  let displayableThemeTags = themeTags.slice();
   if (displayableThemeTags.includes("热门")) {
-    displayableThemeTags = ["热门", ...displayableThemeTags.filter((t) => t !== "热门")];
+    displayableThemeTags = ["热门"].concat(displayableThemeTags.filter((t) => t !== "热门"));
   }
-  const combinedDisplayableTags = [.../* @__PURE__ */ new Set([...displayableThemeTags, ...window.userAddedOldApiTags])];
+  const combinedDisplayableTags = uniqueTags(displayableThemeTags.concat(window.userAddedOldApiTags));
   const themeOptions = combinedDisplayableTags.map((tag) => ({ name: tag, value: tag }));
   if (themeOptions.length > 0) {
     createOldApiButtonGroup("标签", themeOptions, window.currentOldApiFilters.selectedTheme, "selectedTheme", false);
@@ -275,7 +292,7 @@ function initOldApiFilterUIWithMatchedButtons(containerId) {
   });
   if (tagGroupDiv) {
     const buttonsDiv = tagGroupDiv.querySelector(".flex.flex-wrap.gap-2");
-    const currentPredefinedThemeTags = [...themeTags];
+    const currentPredefinedThemeTags = themeTags.slice();
     if (buttonsDiv) {
       const addTagButton = createFilterButton("+ 添加标签", "add_custom_tag", "add_custom_tag", false, () => {
         console.log("'+ 添加标签' button clicked in Old API mode.");
@@ -362,7 +379,7 @@ function updateAllButtonActiveStates() {
       } else {
         isActive = btnValue === window.currentSearchPageFilters[paramName] || btnName === "全部" && !window.currentSearchPageFilters[paramName];
       }
-      btn.className = `px-3 py-1.5 text-sm font-medium rounded-md border transition-colors duration-200 ${isActive ? "bg-pink-600 text-white border-pink-500" : "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:text-white"}`;
+      btn.className = "px-3 py-1.5 text-sm font-medium rounded-md border transition-colors duration-200 ".concat(isActive ? "bg-pink-600 text-white border-pink-500" : "bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600 hover:text-white");
     });
   });
 }
@@ -457,8 +474,8 @@ async function applyOldApiFilters(isLoadingMore = false) {
   const itemsPerPage = 20;
   console.log("[Debug Old API Filter] Selections before URL:", JSON.stringify(window.currentOldApiFilters));
   const effectiveSort = sort;
-  console.log(`[Debug Old API Filter] Derived apiType: ${finalApiType}, Derived apiTag for URL: ${finalApiTag}, Sort: ${effectiveSort}`);
-  const oldApiUrl = `https://movie.douban.com/j/search_subjects?type=${finalApiType}&tag=${encodeURIComponent(finalApiTag)}&sort=${effectiveSort}&page_limit=${itemsPerPage}&page_start=${start}`;
+  console.log("[Debug Old API Filter] Derived apiType: ".concat(finalApiType, ", Derived apiTag for URL: ").concat(finalApiTag, ", Sort: ").concat(effectiveSort));
+  const oldApiUrl = "https://movie.douban.com/j/search_subjects?type=".concat(finalApiType, "&tag=").concat(encodeURIComponent(finalApiTag), "&sort=").concat(effectiveSort, "&page_limit=").concat(itemsPerPage, "&page_start=").concat(start);
   console.log("Applying Old API Douban Filters on Filter Page (Search Subjects):", oldApiUrl);
   const dataPromise = fetchDoubanData(oldApiUrl);
   try {

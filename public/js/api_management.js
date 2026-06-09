@@ -18,13 +18,7 @@ function initAPICheckboxes() {
     const checked = selectedAPIs.includes(apiKey);
     const checkbox = document.createElement("div");
     checkbox.className = "flex items-center";
-    checkbox.innerHTML = `
-            <input type="checkbox" id="api_${apiKey}" 
-                   class="form-checkbox h-3 w-3 text-blue-600 bg-[#222] border border-[#333]" 
-                   ${checked ? "checked" : ""} 
-                   data-api="${apiKey}">
-            <label for="api_${apiKey}" class="ml-1 text-xs text-gray-400 truncate">${api.name}</label>
-        `;
+    checkbox.innerHTML = '\n            <input type="checkbox" id="api_'.concat(apiKey, '" \n                   class="form-checkbox h-3 w-3 text-blue-600 bg-[#222] border border-[#333]" \n                   ').concat(checked ? "checked" : "", ' \n                   data-api="').concat(apiKey, '">\n            <label for="api_').concat(apiKey, '" class="ml-1 text-xs text-gray-400 truncate">').concat(api.name, "</label>\n        ");
     normaldiv.appendChild(checkbox);
     checkbox.querySelector("input").addEventListener("change", function() {
       updateSelectedAPIs();
@@ -44,11 +38,7 @@ function addAdultAPI() {
     adultdiv.className = "grid grid-cols-2 gap-2";
     const adultTitle = document.createElement("div");
     adultTitle.className = "api-group-title adult";
-    adultTitle.innerHTML = `黄色资源采集站 <span class="adult-warning">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-        </span>`;
+    adultTitle.innerHTML = '黄色资源采集站 <span class="adult-warning">\n            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">\n                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />\n            </svg>\n        </span>';
     adultdiv.appendChild(adultTitle);
     Object.keys(API_SITES).forEach((apiKey) => {
       const api = API_SITES[apiKey];
@@ -56,13 +46,7 @@ function addAdultAPI() {
       const checked = selectedAPIs.includes(apiKey);
       const checkbox = document.createElement("div");
       checkbox.className = "flex items-center";
-      checkbox.innerHTML = `
-                <input type="checkbox" id="api_${apiKey}" 
-                       class="form-checkbox h-3 w-3 text-blue-600 bg-[#222] border border-[#333] api-adult" 
-                       ${checked ? "checked" : ""} 
-                       data-api="${apiKey}">
-                <label for="api_${apiKey}" class="ml-1 text-xs text-pink-400 truncate">${api.name}</label>
-            `;
+      checkbox.innerHTML = '\n                <input type="checkbox" id="api_'.concat(apiKey, '" \n                       class="form-checkbox h-3 w-3 text-blue-600 bg-[#222] border border-[#333] api-adult" \n                       ').concat(checked ? "checked" : "", ' \n                       data-api="').concat(apiKey, '">\n                <label for="api_').concat(apiKey, '" class="ml-1 text-xs text-pink-400 truncate">').concat(api.name, "</label>\n            ");
       adultdiv.appendChild(checkbox);
       checkbox.querySelector("input").addEventListener("change", function() {
         updateSelectedAPIs();
@@ -113,26 +97,8 @@ function renderCustomAPIsList() {
     apiItem.className = "flex items-center justify-between p-1 mb-1 bg-[#222] rounded";
     const textColorClass = api.isAdult ? "text-pink-400" : "text-white";
     const adultTag = api.isAdult ? '<span class="text-xs text-pink-400 mr-1">(18+)</span>' : "";
-    const detailLine = api.detail ? `<div class="text-xs text-gray-400 truncate">detail: ${api.detail}</div>` : "";
-    apiItem.innerHTML = `
-            <div class="flex items-center flex-1 min-w-0">
-                <input type="checkbox" id="custom_api_${index}" 
-                       class="form-checkbox h-3 w-3 text-blue-600 mr-1 ${api.isAdult ? "api-adult" : ""}" 
-                       ${selectedAPIs.includes("custom_" + index) ? "checked" : ""} 
-                       data-custom-index="${index}">
-                <div class="flex-1 min-w-0">
-                    <div class="text-xs font-medium ${textColorClass} truncate">
-                        ${adultTag}${api.name}
-                    </div>
-                    <div class="text-xs text-gray-500 truncate">${api.url}</div>
-                    ${detailLine}
-                </div>
-            </div>
-            <div class="flex items-center">
-                <button class="text-blue-500 hover:text-blue-700 text-xs px-1" onclick="editCustomApi(${index})">✎</button>
-                <button class="text-red-500 hover:text-red-700 text-xs px-1" onclick="removeCustomApi(${index})">✕</button>
-            </div>
-        `;
+    const detailLine = api.detail ? '<div class="text-xs text-gray-400 truncate">detail: '.concat(api.detail, "</div>") : "";
+    apiItem.innerHTML = '\n            <div class="flex items-center flex-1 min-w-0">\n                <input type="checkbox" id="custom_api_'.concat(index, '" \n                       class="form-checkbox h-3 w-3 text-blue-600 mr-1 ').concat(api.isAdult ? "api-adult" : "", '" \n                       ').concat(selectedAPIs.includes("custom_" + index) ? "checked" : "", ' \n                       data-custom-index="').concat(index, '">\n                <div class="flex-1 min-w-0">\n                    <div class="text-xs font-medium ').concat(textColorClass, ' truncate">\n                        ').concat(adultTag).concat(api.name, '\n                    </div>\n                    <div class="text-xs text-gray-500 truncate">').concat(api.url, "</div>\n                    ").concat(detailLine, '\n                </div>\n            </div>\n            <div class="flex items-center">\n                <button class="text-blue-500 hover:text-blue-700 text-xs px-1" onclick="editCustomApi(').concat(index, ')">✎</button>\n                <button class="text-red-500 hover:text-red-700 text-xs px-1" onclick="removeCustomApi(').concat(index, ')">✕</button>\n            </div>\n        ');
     container.appendChild(apiItem);
     apiItem.querySelector("input").addEventListener("change", function() {
       updateSelectedAPIs();
@@ -152,10 +118,7 @@ function editCustomApi(index) {
   if (form) {
     form.classList.remove("hidden");
     const buttonContainer = form.querySelector("div:last-child");
-    buttonContainer.innerHTML = `
-            <button type="button" onclick="updateCustomApi(${index})" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">更新</button>
-            <button type="button" onclick="cancelEditCustomApi()" class="bg-[#444] hover:bg-[#555] text-white px-3 py-1 rounded text-xs">取消</button>
-        `;
+    buttonContainer.innerHTML = '\n            <button type="button" onclick="updateCustomApi('.concat(index, ')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">更新</button>\n            <button type="button" onclick="cancelEditCustomApi()" class="bg-[#444] hover:bg-[#555] text-white px-3 py-1 rounded text-xs">取消</button>\n        ');
   }
 }
 function updateCustomApi(index) {
@@ -206,17 +169,14 @@ function restoreAddCustomApiButtons() {
   if (!form) return;
   const buttonContainer = form.querySelector("div:last-child");
   if (!buttonContainer) return;
-  buttonContainer.innerHTML = `
-        <button type="button" onclick="addCustomApi()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">添加</button>
-        <button type="button" onclick="cancelAddCustomApi()" class="bg-[#444] hover:bg-[#555] text-white px-3 py-1 rounded text-xs">取消</button>
-    `;
+  buttonContainer.innerHTML = '\n        <button type="button" onclick="addCustomApi()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs">添加</button>\n        <button type="button" onclick="cancelAddCustomApi()" class="bg-[#444] hover:bg-[#555] text-white px-3 py-1 rounded text-xs">取消</button>\n    ';
 }
 function updateSelectedAPIs() {
   const builtInApiCheckboxes = document.querySelectorAll("#apiCheckboxes input:checked");
   const builtInApis = Array.from(builtInApiCheckboxes).map((input) => input.dataset.api);
   const customApiCheckboxes = document.querySelectorAll("#customApisList input:checked");
   const customApiIndices = Array.from(customApiCheckboxes).map((input) => "custom_" + input.dataset.customIndex);
-  selectedAPIs = [...builtInApis, ...customApiIndices];
+  selectedAPIs = builtInApis.concat(customApiIndices);
   localStorage.setItem("selectedAPIs", JSON.stringify(selectedAPIs));
   updateSelectedApiCount();
 }

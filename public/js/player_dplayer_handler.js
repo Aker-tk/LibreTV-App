@@ -9,7 +9,7 @@ function initPlayer(videoUrl, sourceCode) {
   const loadingDivInit = document.getElementById("loading");
   if (loadingDivInit) {
     loadingDivInit.style.display = "flex";
-    loadingDivInit.innerHTML = `<div class="loading-spinner"></div>`;
+    loadingDivInit.innerHTML = '<div class="loading-spinner"></div>';
   }
   const hlsConfig = {
     debug: false,
@@ -104,7 +104,7 @@ function initPlayer(videoUrl, sourceCode) {
             errorCount++;
             if (data.details === "bufferAppendError") {
               bufferAppendErrorCount++;
-              console.warn(`bufferAppendError 发生 ${bufferAppendErrorCount} 次`);
+              console.warn("bufferAppendError 发生 ".concat(bufferAppendErrorCount, " 次"));
               if (hlsPlaybackStarted) {
                 console.log("视频已在播放中，忽略bufferAppendError");
                 return;
@@ -218,7 +218,7 @@ function initPlayer(videoUrl, sourceCode) {
     let isInOffsetSubmenu = false;
     const applyVideoStyles = () => {
       videoElement.style.objectFit = currentVideoMode;
-      videoElement.style.objectPosition = currentVideoMode === "cover" ? `50% calc(50% + ${currentVideoOffsetY})` : "50% 50%";
+      videoElement.style.objectPosition = currentVideoMode === "cover" ? "50% calc(50% + ".concat(currentVideoOffsetY, ")") : "50% 50%";
       videoElement.style.width = "100%";
       videoElement.style.height = "100%";
     };
@@ -237,7 +237,7 @@ function initPlayer(videoUrl, sourceCode) {
       item.appendChild(toggleDiv);
       switch (type) {
         case "mode":
-          item.classList.add(`dplayer-setting-video-mode-${actionOrMode}`);
+          item.classList.add("dplayer-setting-video-mode-".concat(actionOrMode));
           item.addEventListener("click", () => {
             currentVideoMode = actionOrMode;
             localStorage.setItem("dplayer-video-mode", currentVideoMode);
@@ -253,7 +253,7 @@ function initPlayer(videoUrl, sourceCode) {
           });
           break;
         case "mode-with-submenu":
-          item.classList.add(`dplayer-setting-video-mode-${actionOrMode}`);
+          item.classList.add("dplayer-setting-video-mode-".concat(actionOrMode));
           item.addEventListener("click", () => {
             currentVideoMode = actionOrMode;
             localStorage.setItem("dplayer-video-mode", currentVideoMode);
@@ -279,7 +279,7 @@ function initPlayer(videoUrl, sourceCode) {
             updateActiveStates();
           });
           toggleDiv.style.display = "none";
-          labelSpan.innerHTML = `← ${label}`;
+          labelSpan.innerHTML = "← ".concat(label);
           break;
       }
       return item;
@@ -391,10 +391,7 @@ function initPlayer(videoUrl, sourceCode) {
     if (dp && dp.video && dp.video.currentTime > 0) return;
     const loadingDiv = document.getElementById("loading");
     if (loadingDiv && loadingDiv.style.display !== "none") {
-      loadingDiv.innerHTML = `
-                <div class="loading-spinner"></div>
-                <div style="font-size: 12px; color: #aaa; margin-top: 10px;">如长时间无响应，请尝试其他视频源</div>
-            `;
+      loadingDiv.innerHTML = '\n                <div class="loading-spinner"></div>\n                <div style="font-size: 12px; color: #aaa; margin-top: 10px;">如长时间无响应，请尝试其他视频源</div>\n            ';
     }
   }, 1e4);
   (function() {

@@ -107,16 +107,16 @@ function whenTauriApiReady(callback) {
     const interval = setInterval(() => {
       attempts++;
       if (attempts === 1 || attempts % 50 === 0 || attempts === maxAttempts) {
-        console.log(`[AppInit Polling Attempt ${attempts}] Checking for tauriConstants.invoke...`);
+        console.log("[AppInit Polling Attempt ".concat(attempts, "] Checking for tauriConstants.invoke..."));
         if (typeof tauriConstants !== "undefined" && tauriConstants.invoke) {
-          console.log(`[AppInit Polling Attempt ${attempts}] tauriConstants.invoke is now available.`);
+          console.log("[AppInit Polling Attempt ".concat(attempts, "] tauriConstants.invoke is now available."));
         } else {
-          console.log(`[AppInit Polling Attempt ${attempts}] tauriConstants.invoke is still NOT available.`);
+          console.log("[AppInit Polling Attempt ".concat(attempts, "] tauriConstants.invoke is still NOT available."));
         }
       }
       if (typeof tauriConstants !== "undefined" && tauriConstants.invoke) {
         clearInterval(interval);
-        console.log(`[AppInit] Tauri API (via tauriConstants.invoke) became available after ${attempts} attempts.`);
+        console.log("[AppInit] Tauri API (via tauriConstants.invoke) became available after ".concat(attempts, " attempts."));
         callback();
       } else if (attempts >= maxAttempts) {
         clearInterval(interval);

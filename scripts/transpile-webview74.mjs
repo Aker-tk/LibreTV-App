@@ -11,7 +11,7 @@ const jsDirs = [
 const extraFiles = [
   path.join(publicDir, 'libs', 'tailwindcss.min.js'),
 ];
-const target = 'chrome74';
+const target = 'chrome58';
 
 export async function transformSourceForWebView74(source) {
   const result = await transform(source, {
@@ -20,6 +20,9 @@ export async function transformSourceForWebView74(source) {
     minify: false,
     sourcemap: false,
     target,
+    supported: {
+      'object-rest-spread': false,
+    },
   });
 
   return result.code;

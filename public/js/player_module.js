@@ -40,12 +40,12 @@ function playVideo(url, vod_name, sourceCode, episodeIndex = 0) {
     episodeIndex,
     sourceName,
     timestamp: Date.now(),
-    episodes: currentEpisodes && currentEpisodes.length > 0 ? [...currentEpisodes] : []
+    episodes: currentEpisodes && currentEpisodes.length > 0 ? currentEpisodes.slice() : []
   };
   if (typeof addToViewingHistory === "function") {
     addToViewingHistory(videoInfo);
   }
-  const playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(videoTitleForHistory)}&index=${episodeIndex}&source=${encodeURIComponent(sourceName)}&source_code=${encodeURIComponent(sourceCode)}`;
+  const playerUrl = "player.html?url=".concat(encodeURIComponent(url), "&title=").concat(encodeURIComponent(videoTitleForHistory), "&index=").concat(episodeIndex, "&source=").concat(encodeURIComponent(sourceName), "&source_code=").concat(encodeURIComponent(sourceCode));
   showVideoPlayer(playerUrl);
 }
 function showVideoPlayer(url) {

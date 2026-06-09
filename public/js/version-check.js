@@ -1,18 +1,6 @@
 (function() {
   const style = document.createElement("style");
-  style.textContent = `
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.6;
-            }
-        }
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-    `;
+  style.textContent = "\n        @keyframes pulse {\n            0%, 100% {\n                opacity: 1;\n            }\n            50% {\n                opacity: 0.6;\n            }\n        }\n        .animate-pulse {\n            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;\n        }\n    ";
   document.head.appendChild(style);
 })();
 const VERSION_URL = {
@@ -36,7 +24,7 @@ async function fetchVersionViaTauri(url) {
     }
   });
   if (!response || response.status < 200 || response.status >= 300) {
-    throw new Error(`Tauri version request failed with status ${response ? response.status : "unknown"}`);
+    throw new Error("Tauri version request failed with status ".concat(response ? response.status : "unknown"));
   }
   return response.body;
 }
@@ -103,14 +91,14 @@ function formatVersion(versionString) {
     const day = cleanedString.substring(6, 8);
     const hour = cleanedString.substring(8, 10);
     const minute = cleanedString.substring(10, 12);
-    return `${year}-${month}-${day} ${hour}:${minute}`;
+    return "".concat(year, "-").concat(month, "-").concat(day, " ").concat(hour, ":").concat(minute);
   }
   return cleanedString;
 }
 function createErrorVersionElement(errorMessage) {
   const errorElement = document.createElement("p");
   errorElement.className = "text-gray-500 text-sm mt-1 text-center md:text-left";
-  errorElement.innerHTML = `版本: <span class="text-amber-500">检测失败</span>`;
+  errorElement.innerHTML = '版本: <span class="text-amber-500">检测失败</span>';
   errorElement.title = errorMessage;
   return errorElement;
 }
@@ -123,14 +111,9 @@ function addVersionInfoToFooter() {
     }
     const versionElement = document.createElement("p");
     versionElement.className = "text-gray-500 text-sm mt-1 text-center md:text-left";
-    versionElement.innerHTML = `版本: ${result.currentFormatted}`;
+    versionElement.innerHTML = "版本: ".concat(result.currentFormatted);
     if (result.hasUpdate) {
-      versionElement.innerHTML += ` <span class="inline-flex items-center bg-red-600 text-white text-xs px-2 py-0.5 rounded-md ml-1 cursor-pointer animate-pulse font-medium">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                发现新版
-            </span>`;
+      versionElement.innerHTML += ' <span class="inline-flex items-center bg-red-600 text-white text-xs px-2 py-0.5 rounded-md ml-1 cursor-pointer animate-pulse font-medium">\n                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">\n                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />\n                </svg>\n                发现新版\n            </span>';
       setTimeout(() => {
         const updateBtn = versionElement.querySelector("span");
         if (updateBtn) {
@@ -140,12 +123,12 @@ function addVersionInfoToFooter() {
         }
       }, 100);
     } else {
-      versionElement.innerHTML = `版本: ${result.currentFormatted} <span class="text-green-500">(最新版本)</span>`;
+      versionElement.innerHTML = "版本: ".concat(result.currentFormatted, ' <span class="text-green-500">(最新版本)</span>');
     }
     displayVersionElement(versionElement);
   }).catch((error) => {
     console.error("版本检测出错:", error);
-    const errorElement = createErrorVersionElement(`错误信息: ${error.message}`);
+    const errorElement = createErrorVersionElement("错误信息: ".concat(error.message));
     displayVersionElement(errorElement);
   });
 }

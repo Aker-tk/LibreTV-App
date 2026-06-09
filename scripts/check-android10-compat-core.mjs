@@ -1,10 +1,13 @@
 import { parse } from 'acorn';
 
+const COMPAT_LABEL = 'Android System WebView 58';
+
 const RULES = {
-  'optional-chaining': 'Optional chaining is not supported by Android System WebView 74.',
-  'nullish-coalescing': 'Nullish coalescing is not supported by Android System WebView 74.',
-  'logical-and-assignment': 'Logical AND assignment is not supported by Android System WebView 74.',
-  'logical-or-assignment': 'Logical OR assignment is not supported by Android System WebView 74.',
+  'optional-chaining': `Optional chaining is not supported by ${COMPAT_LABEL}.`,
+  'nullish-coalescing': `Nullish coalescing is not supported by ${COMPAT_LABEL}.`,
+  'logical-and-assignment': `Logical AND assignment is not supported by ${COMPAT_LABEL}.`,
+  'logical-or-assignment': `Logical OR assignment is not supported by ${COMPAT_LABEL}.`,
+  'object-spread': `Object spread syntax is not supported by ${COMPAT_LABEL}.`,
 };
 
 function getLine(content, lineNumber) {
@@ -29,12 +32,31 @@ function getNodeType(node) {
     return 'logical-or-assignment';
   }
 
+  if (node.type === 'SpreadElement' && node.parentType === 'ObjectExpression') {
+    return 'object-spread';
+  }
+
   return null;
 }
 
-function walk(node, visit) {
+function walk(node, parent = null, parentKey = '', visit = () => {}) {
   if (!node || typeof node !== 'object') {
     return;
+  }
+
+  if (parent && node.type && !node.parentType) {
+    Object.defineProperty(node, 'parentType', {
+      value: parent.type,
+      enumerable: false,
+      configurable: true,
+    });
+  }
+  if (parentKey && node.type && !node.parentKey) {
+    Object.defineProperty(node, 'parentKey', {
+      value: parentKey,
+      enumerable: false,
+      configurable: true,
+    });
   }
 
   visit(node);
@@ -45,11 +67,11 @@ function walk(node, visit) {
     }
 
     if (Array.isArray(value)) {
-      value.forEach((item) => walk(item, visit));
+      value.forEach((item) => walk(item, node, key, visit));
       return;
     }
 
-    walk(value, visit);
+    walk(value, node, key, visit);
   });
 }
 
@@ -88,7 +110,7 @@ export function collectUnsupportedSyntaxMatches(content, relativePath = '<inline
     }
   }
 
-  walk(ast, (node) => {
+  walk(ast, null, '', (node) => {
     const type = getNodeType(node);
     if (type) {
       const line = node.loc?.start?.line ?? 1;

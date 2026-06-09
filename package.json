@@ -10,8 +10,12 @@
     "serve:public": "serve public -l 3000 -s",
     "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/styles.css --minify",
     "build:webview74": "node ./scripts/transpile-webview74.mjs",
+    "build:webview58": "node ./scripts/transpile-webview74.mjs",
     "check:webview74": "node ./scripts/check-android10-compat.mjs",
+    "check:webview58": "node ./scripts/check-android10-compat.mjs",
     "test:webview74-check": "node ./scripts/check-android10-compat.test.mjs",
+    "test:webview58-check": "node ./scripts/check-android10-compat.test.mjs",
+    "test:webview58-transpile": "node ./scripts/transpile-webview74.test.mjs",
     "test:version-check": "node ./scripts/version-check.test.mjs"
   },
   "dependencies": {

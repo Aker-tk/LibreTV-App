@@ -27,7 +27,7 @@ function showError(message) {
 }
 function updateEpisodeInfo() {
   if (currentEpisodes.length > 0) {
-    document.getElementById("episodeInfo").textContent = `第 ${currentEpisodeIndex + 1}/${currentEpisodes.length} 集`;
+    document.getElementById("episodeInfo").textContent = "第 ".concat(currentEpisodeIndex + 1, "/").concat(currentEpisodes.length, " 集");
   } else {
     document.getElementById("episodeInfo").textContent = "无集数信息";
   }
@@ -62,18 +62,12 @@ function renderEpisodes() {
     episodesList.innerHTML = '<div class="col-span-full text-center text-gray-400 py-8">没有可用的集数</div>';
     return;
   }
-  const episodesToRender = episodesReversed ? [...currentEpisodes].reverse() : currentEpisodes;
+  const episodesToRender = episodesReversed ? currentEpisodes.slice().reverse() : currentEpisodes;
   let html = "";
   episodesToRender.forEach((episodeUrl, indexInRenderedList) => {
     const realIndex = episodesReversed ? currentEpisodes.length - 1 - indexInRenderedList : indexInRenderedList;
     const isActive = realIndex === currentEpisodeIndex;
-    html += `
-            <button id="episode-${realIndex}" 
-                    onclick="playEpisode(${realIndex})" 
-                    class="px-4 py-2 ${isActive ? "episode-active" : "!bg-[#222] hover:!bg-[#333] hover:!shadow-none"} !border ${isActive ? "!border-blue-500" : "!border-[#333]"} rounded-lg transition-colors text-center episode-btn">
-                第${realIndex + 1}集
-            </button>
-        `;
+    html += '\n            <button id="episode-'.concat(realIndex, '" \n                    onclick="playEpisode(').concat(realIndex, ')" \n                    class="px-4 py-2 ').concat(isActive ? "episode-active" : "!bg-[#222] hover:!bg-[#333] hover:!shadow-none", " !border ").concat(isActive ? "!border-blue-500" : "!border-[#333]", ' rounded-lg transition-colors text-center episode-btn">\n                第').concat(realIndex + 1, "集\n            </button>\n        ");
   });
   episodesList.innerHTML = html;
 }
@@ -89,7 +83,7 @@ function showPositionRestoreHint(position) {
   if (!position || position < 10) return;
   const hint = document.createElement("div");
   hint.className = "position-restore-hint";
-  hint.innerHTML = `<div class="hint-content">已从 ${formatTime(position)} 继续播放</div>`;
+  hint.innerHTML = '<div class="hint-content">已从 '.concat(formatTime(position), " 继续播放</div>");
   const playerContainer = document.querySelector(".player-container");
   if (playerContainer) {
     playerContainer.appendChild(hint);
@@ -109,5 +103,5 @@ function formatTime(seconds) {
   if (isNaN(seconds)) return "00:00";
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = Math.floor(seconds % 60);
-  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
+  return "".concat(minutes.toString().padStart(2, "0"), ":").concat(remainingSeconds.toString().padStart(2, "0"));
 }

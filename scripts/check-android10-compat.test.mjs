@@ -17,3 +17,10 @@ const title = movie?.title;
 
 assert.equal(optionalChainingMatches.length, 1);
 assert.equal(optionalChainingMatches[0].type, 'optional-chaining');
+
+const objectSpreadMatches = collectUnsupportedSyntaxMatches(`
+const nextState = { ...prevState, ready: true };
+`);
+
+assert.equal(objectSpreadMatches.length, 1);
+assert.equal(objectSpreadMatches[0].type, 'object-spread');

@@ -3,15 +3,15 @@ async function handleStandardDetailFetch(id, sourceCode, customApi) {
   if (!/^[\w-]+$/.test(id)) throw createApiError("无效的视频ID格式");
   if (sourceCode === "custom" && !customApi) throw createApiError("使用自定义API时必须提供API地址");
   if (!API_SITES[sourceCode] && sourceCode !== "custom") throw createApiError("无效的API来源");
-  const detailUrl = customApi ? `${customApi}${API_CONFIG.detail.path}${id}` : `${API_SITES[sourceCode].api}${API_CONFIG.detail.path}${id}`;
+  const detailUrl = customApi ? "".concat(customApi).concat(API_CONFIG.detail.path).concat(id) : "".concat(API_SITES[sourceCode].api).concat(API_CONFIG.detail.path).concat(id);
   const responseData = await executeApiRequest(detailUrl, {
     headers: API_CONFIG.detail.headers || {},
     timeoutSecs: tauriConstants.TIMEOUT_SECS,
     // tauriConstants должен быть доступен
-    sourceForLog: `detail-${sourceCode}`
+    sourceForLog: "detail-".concat(sourceCode)
   });
   if (typeof responseData.code !== "undefined" && ![0, 1, 200].includes(responseData.code)) {
-    throw createApiError(responseData.msg || `API返回错误代码 (详情): ${responseData.code}`, responseData.code);
+    throw createApiError(responseData.msg || "API返回错误代码 (详情): ".concat(responseData.code), responseData.code);
   }
   if (!responseData || !responseData.list || !Array.isArray(responseData.list) || responseData.list.length === 0) {
     if (responseData.code !== 1 || responseData.list && responseData.list.length > 0) {
@@ -59,8 +59,8 @@ async function handleStandardDetailFetch(id, sourceCode, customApi) {
 }
 window.handleStandardDetailFetch = handleStandardDetailFetch;
 async function handleCustomApiSpecialDetail(id, customApi) {
-  const detailUrl = `${customApi}/index.php/vod/detail/id/${id}.html`;
-  console.log(`[Debug] CustomApiSpecialDetail: Requesting HTML via Tauri invoke for: ${detailUrl}`);
+  const detailUrl = "".concat(customApi, "/index.php/vod/detail/id/").concat(id, ".html");
+  console.log("[Debug] CustomApiSpecialDetail: Requesting HTML via Tauri invoke for: ".concat(detailUrl));
   try {
     const tauriCore = window.__TAURI__.core;
     const rustRequestOptions = {
@@ -74,7 +74,7 @@ async function handleCustomApiSpecialDetail(id, customApi) {
     };
     const rustResponse = await tauriCore.invoke("make_http_request", { options: rustRequestOptions });
     if (!(rustResponse.status >= 200 && rustResponse.status < 300)) {
-      throw createApiError(`自定义API详情页HTML请求失败 (via Rust): ${rustResponse.status}. Body: ${rustResponse.body.substring(0, 200)}`, rustResponse.status);
+      throw createApiError("自定义API详情页HTML请求失败 (via Rust): ".concat(rustResponse.status, ". Body: ").concat(rustResponse.body.substring(0, 200)), rustResponse.status);
     }
     const html = rustResponse.body;
     const generalPattern = /\$(https?:\/\/[^"'\s]+?\.m3u8)/g;
@@ -100,13 +100,13 @@ async function handleCustomApiSpecialDetail(id, customApi) {
       }
     };
   } catch (error) {
-    console.error(`自定义API详情获取失败 (HTML via Rust):`, error);
+    console.error("自定义API详情获取失败 (HTML via Rust):", error);
     if (error instanceof Error) {
       throw error;
     } else if (typeof error === "string") {
       throw createApiError(error);
     } else if (error && error.error) {
-      throw createApiError(error.error + (error.details ? `: ${error.details}` : ""), error.status || 500);
+      throw createApiError(error.error + (error.details ? ": ".concat(error.details) : ""), error.status || 500);
     } else {
       throw createApiError("未知错误在 handleCustomApiSpecialDetail (Rust path)");
     }
@@ -114,8 +114,8 @@ async function handleCustomApiSpecialDetail(id, customApi) {
 }
 window.handleCustomApiSpecialDetail = handleCustomApiSpecialDetail;
 async function handleSpecialSourceDetail(id, sourceCode) {
-  const detailUrl = `${API_SITES[sourceCode].detail}/index.php/vod/detail/id/${id}.html`;
-  console.log(`[Debug] SpecialSourceDetail: Requesting HTML via Tauri invoke for: ${detailUrl}`);
+  const detailUrl = "".concat(API_SITES[sourceCode].detail, "/index.php/vod/detail/id/").concat(id, ".html");
+  console.log("[Debug] SpecialSourceDetail: Requesting HTML via Tauri invoke for: ".concat(detailUrl));
   try {
     const tauriCore = window.__TAURI__.core;
     const rustRequestOptions = {
@@ -129,13 +129,13 @@ async function handleSpecialSourceDetail(id, sourceCode) {
     };
     const rustResponse = await tauriCore.invoke("make_http_request", { options: rustRequestOptions });
     if (!(rustResponse.status >= 200 && rustResponse.status < 300)) {
-      throw createApiError(`特殊源详情页HTML请求失败 (via Rust): ${rustResponse.status}. Body: ${rustResponse.body.substring(0, 200)}`, rustResponse.status);
+      throw createApiError("特殊源详情页HTML请求失败 (via Rust): ".concat(rustResponse.status, ". Body: ").concat(rustResponse.body.substring(0, 200)), rustResponse.status);
     }
     const html = rustResponse.body;
     let matches = [];
     if (sourceCode === "ffzy") matches = html.match(/\$(https?:\/\/[^"'\s]+?\/\d{8}\/\d+_[a-f0-9]+\/index\.m3u8)/g) || [];
     if (matches.length === 0) matches = html.match(/\$(https?:\/\/[^"'\s]+?\.m3u8)/g) || [];
-    matches = [...new Set(matches)].map((link) => {
+    matches = Array.from(new Set(matches)).map((link) => {
       link = link.substring(1);
       const parenIndex = link.indexOf("(");
       return parenIndex > 0 ? link.substring(0, parenIndex) : link;
@@ -156,15 +156,15 @@ async function handleSpecialSourceDetail(id, sourceCode) {
       }
     };
   } catch (error) {
-    console.error(`${API_SITES[sourceCode].name}详情获取失败 (HTML via Rust):`, error);
+    console.error("".concat(API_SITES[sourceCode].name, "详情获取失败 (HTML via Rust):"), error);
     if (error instanceof Error) {
       throw error;
     } else if (typeof error === "string") {
       throw createApiError(error);
     } else if (error && error.error) {
-      throw createApiError(error.error + (error.details ? `: ${error.details}` : ""), error.status || 500);
+      throw createApiError(error.error + (error.details ? ": ".concat(error.details) : ""), error.status || 500);
     } else {
-      throw createApiError(`未知错误在 handleSpecialSourceDetail (Rust path) for ${sourceCode}`);
+      throw createApiError("未知错误在 handleSpecialSourceDetail (Rust path) for ".concat(sourceCode));
     }
   }
 }

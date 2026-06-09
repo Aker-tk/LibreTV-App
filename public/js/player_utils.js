@@ -28,13 +28,13 @@ function saveToHistory() {
   const videoInfo = {
     title: currentVideoTitle,
     directVideoUrl: currentVideoUrl,
-    url: `player.html?url=${encodeURIComponent(currentVideoUrl)}&title=${encodeURIComponent(currentVideoTitle)}&source=${encodeURIComponent(sourceName)}&source_code=${encodeURIComponent(sourceCode)}&index=${currentEpisodeIndex}&position=${Math.floor(currentPosition || 0)}`,
+    url: "player.html?url=".concat(encodeURIComponent(currentVideoUrl), "&title=").concat(encodeURIComponent(currentVideoTitle), "&source=").concat(encodeURIComponent(sourceName), "&source_code=").concat(encodeURIComponent(sourceCode), "&index=").concat(currentEpisodeIndex, "&position=").concat(Math.floor(currentPosition || 0)),
     episodeIndex: currentEpisodeIndex,
     sourceName,
     timestamp: Date.now(),
     playbackPosition: currentPosition,
     duration: videoDuration,
-    episodes: currentEpisodes && currentEpisodes.length > 0 ? [...currentEpisodes] : []
+    episodes: currentEpisodes && currentEpisodes.length > 0 ? currentEpisodes.slice() : []
   };
   try {
     const history = JSON.parse(localStorage.getItem("viewingHistory") || "[]");
@@ -49,7 +49,7 @@ function saveToHistory() {
       history[existingIndex].url = videoInfo.url;
       if (currentEpisodes && currentEpisodes.length > 0) {
         if (!history[existingIndex].episodes || !Array.isArray(history[existingIndex].episodes) || history[existingIndex].episodes.length !== currentEpisodes.length) {
-          history[existingIndex].episodes = [...currentEpisodes];
+          history[existingIndex].episodes = currentEpisodes.slice();
         }
       }
       const updatedItem = history.splice(existingIndex, 1)[0];
@@ -73,7 +73,7 @@ function saveCurrentProgress() {
   const currentTime = dp.video.currentTime;
   const duration = dp.video.duration;
   if (!duration || currentTime < 1) return;
-  const progressKey = `videoProgress_${getVideoId()}`;
+  const progressKey = "videoProgress_".concat(getVideoId());
   const progressData = { position: currentTime, duration, timestamp: Date.now() };
   try {
     localStorage.setItem(progressKey, JSON.stringify(progressData));
@@ -95,7 +95,7 @@ function saveCurrentProgress() {
   }
 }
 function clearVideoProgress() {
-  const progressKey = `videoProgress_${getVideoId()}`;
+  const progressKey = "videoProgress_".concat(getVideoId());
   try {
     localStorage.removeItem(progressKey);
     console.log("已清除播放进度记录");
@@ -104,8 +104,8 @@ function clearVideoProgress() {
   }
 }
 function getVideoId() {
-  if (currentVideoUrl) return `${encodeURIComponent(currentVideoUrl)}`;
-  return `${encodeURIComponent(currentVideoTitle)}_${currentEpisodeIndex}`;
+  if (currentVideoUrl) return "".concat(encodeURIComponent(currentVideoUrl));
+  return "".concat(encodeURIComponent(currentVideoTitle), "_").concat(currentEpisodeIndex);
 }
 function setupLongPressSpeedControl() {
   if (!dp || !dp.video) return;
@@ -114,7 +114,7 @@ function setupLongPressSpeedControl() {
   let originalPlaybackRate = 1;
   let isLongPress = false;
   function showSpeedHint(speed) {
-    showShortcutHint(`${speed}倍速`, "right");
+    showShortcutHint("".concat(speed, "倍速"), "right");
   }
   playerElement.oncontextmenu = () => {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);

@@ -1,5 +1,21 @@
+var __defProp = Object.defineProperty;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
 async function executeApiRequest(apiUrl, options = {}) {
-  console.log(`[JS] executeApiRequest called with apiUrl: ${apiUrl}, options:`, JSON.stringify(options));
+  console.log("[JS] executeApiRequest called with apiUrl: ".concat(apiUrl, ", options:"), JSON.stringify(options));
   const {
     method = "GET",
     headers = {},
@@ -9,7 +25,7 @@ async function executeApiRequest(apiUrl, options = {}) {
     asText = false
     // New option to expect text response
   } = options;
-  const logPrefix = sourceForLog ? `(${sourceForLog}) ` : "";
+  const logPrefix = sourceForLog ? "(".concat(sourceForLog, ") ") : "";
   let responseData;
   const isTauriNow = isLikelyTauriEnvironment();
   if (isTauriNow && tauriConstants.invoke) {
@@ -31,17 +47,17 @@ async function executeApiRequest(apiUrl, options = {}) {
           if (contentType.includes("application/json")) {
             responseData = JSON.parse(rustResponse.body);
           } else {
-            throw createApiError(`${logPrefix}API (via invoke) returned non-JSON content-type: '${contentType}' when JSON was expected. Body: ${rustResponse.body.substring(0, 200)}`);
+            throw createApiError("".concat(logPrefix, "API (via invoke) returned non-JSON content-type: '").concat(contentType, "' when JSON was expected. Body: ").concat(rustResponse.body.substring(0, 200)));
           }
         }
       } else {
-        throw createApiError(`${logPrefix}API (via invoke) returned error status ${rustResponse.status}. Body: ${rustResponse.body.substring(0, 200)}`, rustResponse.status);
+        throw createApiError("".concat(logPrefix, "API (via invoke) returned error status ").concat(rustResponse.status, ". Body: ").concat(rustResponse.body.substring(0, 200)), rustResponse.status);
       }
     } catch (invokeError) {
-      console.error(`Tauri invoke 'make_http_request' failed for ${logPrefix}request:`, invokeError);
-      let errMsg = `Tauri IPC call failed for ${logPrefix}request`;
+      console.error("Tauri invoke 'make_http_request' failed for ".concat(logPrefix, "request:"), invokeError);
+      let errMsg = "Tauri IPC call failed for ".concat(logPrefix, "request");
       if (typeof invokeError === "string") errMsg = invokeError;
-      else if (invokeError && typeof invokeError === "object" && invokeError.error) errMsg = `${invokeError.error}${invokeError.details ? ": " + invokeError.details : ""}`;
+      else if (invokeError && typeof invokeError === "object" && invokeError.error) errMsg = "".concat(invokeError.error).concat(invokeError.details ? ": " + invokeError.details : "");
       else if (invokeError && invokeError.message) errMsg = invokeError.message;
       const customErr = createApiError(errMsg);
       if (invokeError && typeof invokeError === "object" && invokeError.status) customErr.statusCode = invokeError.status;
@@ -51,7 +67,7 @@ async function executeApiRequest(apiUrl, options = {}) {
     let controller = new AbortController();
     let timeoutId = setTimeout(() => controller.abort(), timeoutSecs * 1e3);
     let fetchUrlToUse = apiUrl;
-    let effectiveHeaders = { ...headers };
+    let effectiveHeaders = __spreadValues({}, headers);
     try {
       const response = await fetch(fetchUrlToUse, { headers: effectiveHeaders, signal: controller.signal, method });
       clearTimeout(timeoutId);
@@ -59,31 +75,31 @@ async function executeApiRequest(apiUrl, options = {}) {
       const responseText = await response.text();
       const contentType = response.headers.get("content-type");
       if (!response.ok) {
-        let errMsg = `${logPrefix}代理服务错误: ${response.status}. URL: ${fetchUrlToUse}. Response: ${responseText.substring(0, 200)}`;
+        let errMsg = "".concat(logPrefix, "代理服务错误: ").concat(response.status, ". URL: ").concat(fetchUrlToUse, ". Response: ").concat(responseText.substring(0, 200));
         try {
           const eData = JSON.parse(responseText);
-          if (eData) errMsg += eData.error ? ` - ${eData.error}` : eData.msg ? ` - ${eData.msg}` : "";
+          if (eData) errMsg += eData.error ? " - ".concat(eData.error) : eData.msg ? " - ".concat(eData.msg) : "";
         } catch (e) {
         }
-        console.error(`[executeApiRequest] Fetch error: Status ${response.status}, URL: ${fetchUrlToUse}, Headers:`, response.headers, `Body chunk: ${responseText.substring(0, 500)}`);
+        console.error("[executeApiRequest] Fetch error: Status ".concat(response.status, ", URL: ").concat(fetchUrlToUse, ", Headers:"), response.headers, "Body chunk: ".concat(responseText.substring(0, 500)));
         throw createApiError(errMsg, response.status);
       }
       try {
         responseData = JSON.parse(responseText);
       } catch (parseError) {
-        const errorDetails = `${logPrefix}内容解析失败. Content-Type: ${contentType}. URL: ${fetchUrlToUse}. Error: ${parseError.message}. Body chunk: ${responseText.substring(0, 500)}`;
-        console.error(`[executeApiRequest] JSON Parse error:`, errorDetails);
+        const errorDetails = "".concat(logPrefix, "内容解析失败. Content-Type: ").concat(contentType, ". URL: ").concat(fetchUrlToUse, ". Error: ").concat(parseError.message, ". Body chunk: ").concat(responseText.substring(0, 500));
+        console.error("[executeApiRequest] JSON Parse error:", errorDetails);
         if (!contentType || !contentType.includes("application/json")) {
-          throw createApiError(`${logPrefix}API返回的不是有效的JSON格式，且内容解析失败。接收到 Content-Type: ${contentType}. 内容: ${responseText.substring(0, 100)}...`);
+          throw createApiError("".concat(logPrefix, "API返回的不是有效的JSON格式，且内容解析失败。接收到 Content-Type: ").concat(contentType, ". 内容: ").concat(responseText.substring(0, 100), "..."));
         }
-        throw createApiError(`${logPrefix}API返回了application/json类型，但JSON内容无效。错误: ${parseError.message}. 内容: ${responseText.substring(0, 100)}...`);
+        throw createApiError("".concat(logPrefix, "API返回了application/json类型，但JSON内容无效。错误: ").concat(parseError.message, ". 内容: ").concat(responseText.substring(0, 100), "..."));
       }
       if (contentType && !contentType.includes("application/json")) {
-        console.warn(`[executeApiRequest] ${logPrefix}Response parsed as JSON, but Content-Type was '${contentType}'. URL: ${fetchUrlToUse}`);
+        console.warn("[executeApiRequest] ".concat(logPrefix, "Response parsed as JSON, but Content-Type was '").concat(contentType, "'. URL: ").concat(fetchUrlToUse));
       }
     } catch (fetchCatchError) {
       if (timeoutId) clearTimeout(timeoutId);
-      console.error(`[executeApiRequest] Catch all fetch error for ${logPrefix}request to ${fetchUrlToUse}:`, fetchCatchError, `Original URL: ${apiUrl}`);
+      console.error("[executeApiRequest] Catch all fetch error for ".concat(logPrefix, "request to ").concat(fetchUrlToUse, ":"), fetchCatchError, "Original URL: ".concat(apiUrl));
       throw fetchCatchError;
     }
   }

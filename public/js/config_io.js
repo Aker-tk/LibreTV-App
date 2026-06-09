@@ -32,8 +32,8 @@ async function importConfig() {
       }, 3e3);
     } catch (error) {
       const message = typeof error === "string" ? error : error instanceof Error ? error.message : "配置文件格式错误";
-      if (typeof showToast === "function") showToast(`配置文件读取出错 (${message})`, "error");
-      else console.error(`Config import error: ${message}`);
+      if (typeof showToast === "function") showToast("配置文件读取出错 (".concat(message, ")"), "error");
+      else console.error("Config import error: ".concat(message));
     }
   });
 }

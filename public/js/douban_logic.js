@@ -1,11 +1,33 @@
+var __defProp = Object.defineProperty;
+var __defProps = Object.defineProperties;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
+var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __propIsEnum = Object.prototype.propertyIsEnumerable;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
+var __spreadValues = (a, b) => {
+  for (var prop in b || (b = {}))
+    if (__hasOwnProp.call(b, prop))
+      __defNormalProp(a, prop, b[prop]);
+  if (__getOwnPropSymbols)
+    for (var prop of __getOwnPropSymbols(b)) {
+      if (__propIsEnum.call(b, prop))
+        __defNormalProp(a, prop, b[prop]);
+    }
+  return a;
+};
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 console.log("douban_logic.js loaded");
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
+    const temp = array[i];
+    array[i] = array[j];
+    array[j] = temp;
   }
 }
-async function fetchAndCacheDoubanData(cacheKey, fetchFn, ...fetchArgs) {
+async function fetchAndCacheDoubanData(cacheKey, fetchFn) {
+  const fetchArgs = Array.prototype.slice.call(arguments, 2);
   try {
     const cachedData = sessionStorage.getItem(cacheKey);
     if (cachedData) {
@@ -16,7 +38,7 @@ async function fetchAndCacheDoubanData(cacheKey, fetchFn, ...fetchArgs) {
     console.error("豆瓣首页：读取缓存失败", cacheKey, e);
     sessionStorage.removeItem(cacheKey);
   }
-  const data = await fetchFn(...fetchArgs);
+  const data = await fetchFn.apply(null, fetchArgs);
   if (data && data.subjects) {
     try {
       sessionStorage.setItem(cacheKey, JSON.stringify(data));
@@ -70,13 +92,13 @@ window.noMoreHomePageTags = false;
 function loadUserTags() {
   try {
     const savedMovieTags = localStorage.getItem("userMovieTags");
-    window.movieTags = savedMovieTags ? JSON.parse(savedMovieTags) : [...window.defaultMovieTags];
+    window.movieTags = savedMovieTags ? JSON.parse(savedMovieTags) : window.defaultMovieTags.slice();
     const savedTvTags = localStorage.getItem("userTvTags");
-    window.tvTags = savedTvTags ? JSON.parse(savedTvTags) : [...window.defaultTvTags];
+    window.tvTags = savedTvTags ? JSON.parse(savedTvTags) : window.defaultTvTags.slice();
   } catch (e) {
     console.error("加载标签失败：", e);
-    window.movieTags = [...window.defaultMovieTags];
-    window.tvTags = [...window.defaultTvTags];
+    window.movieTags = window.defaultMovieTags.slice();
+    window.tvTags = window.defaultTvTags.slice();
   }
 }
 function saveUserTags() {
@@ -149,19 +171,19 @@ async function loadNextBatchOfHomePageTags() {
     } else {
       recommendationsContainer.appendChild(section);
     }
-    carouselTrack.innerHTML = `<div class="text-gray-400 p-4">正在加载 ${tagConfig.title}...</div>`;
+    carouselTrack.innerHTML = '<div class="text-gray-400 p-4">正在加载 '.concat(tagConfig.title, "...</div>");
     let data;
     const useOnlyOldApi = localStorage.getItem("doubanApiMode") !== "true";
-    let cacheKeyPrefix = `doubanCache_home_${tagConfig.title.replace(/[^a-zA-Z0-9]/g, "")}_`;
+    let cacheKeyPrefix = "doubanCache_home_".concat(tagConfig.title.replace(/[^a-zA-Z0-9]/g, ""), "_");
     if (tagConfig.isChart) {
-      console.log(`[Home Page Waterfall] Preparing chart for "${tagConfig.title}" (Genre: ${tagConfig.chartGenreName})`);
-      const chartCacheKey = `${cacheKeyPrefix}chart_${tagConfig.chartGenreName}_${window.homePageItemsPerTag}`;
+      console.log('[Home Page Waterfall] Preparing chart for "'.concat(tagConfig.title, '" (Genre: ').concat(tagConfig.chartGenreName, ")"));
+      const chartCacheKey = "".concat(cacheKeyPrefix, "chart_").concat(tagConfig.chartGenreName, "_").concat(window.homePageItemsPerTag);
       data = await fetchAndCacheDoubanData(chartCacheKey, fetchDoubanChartTopList, tagConfig.chartGenreName, { limit: window.homePageItemsPerTag });
     } else if (!useOnlyOldApi && tagConfig.useNewApi && tagConfig.apiParams) {
-      const paramsForFetch = { ...tagConfig.apiParams, start: "0" };
+      const paramsForFetch = __spreadProps(__spreadValues({}, tagConfig.apiParams), { start: "0" });
       const paramsString = JSON.stringify(paramsForFetch, Object.keys(paramsForFetch).sort());
-      const newApiCacheKey = `${cacheKeyPrefix}new_${paramsString.replace(/[^a-zA-Z0-9]/g, "")}`;
-      console.log(`[Home Page Waterfall] Preparing New API fetch for "${tagConfig.title}"`);
+      const newApiCacheKey = "".concat(cacheKeyPrefix, "new_").concat(paramsString.replace(/[^a-zA-Z0-9]/g, ""));
+      console.log('[Home Page Waterfall] Preparing New API fetch for "'.concat(tagConfig.title, '"'));
       data = await fetchAndCacheDoubanData(newApiCacheKey, fetchNewDoubanSearch, paramsForFetch);
     } else {
       const doubanApiBase = "https://movie.douban.com";
@@ -186,9 +208,9 @@ async function loadNextBatchOfHomePageTags() {
         const newApiSortParam = tagConfig.apiParams.sort || tagConfig.apiSort;
         oldApiSort = sortMap[newApiSortParam] || (["recommend", "time", "rank"].includes(newApiSortParam) ? newApiSortParam : "recommend");
       }
-      const targetUrl = `${doubanApiBase}/j/search_subjects?type=${oldApiType}&tag=${encodeURIComponent(oldApiTag)}&sort=${oldApiSort}&page_limit=${window.homePageItemsPerTag}&page_start=0`;
-      const oldApiCacheKey = `${cacheKeyPrefix}old_${encodeURIComponent(targetUrl)}`;
-      console.log(`[Home Page Waterfall] (${useOnlyOldApi ? "Old API Mode Fallback" : "Old API Config"}) Preparing Old API fetch for section "${tagConfig.title}" (tag: ${oldApiTag}, type: ${oldApiType}, sort: ${oldApiSort})`);
+      const targetUrl = "".concat(doubanApiBase, "/j/search_subjects?type=").concat(oldApiType, "&tag=").concat(encodeURIComponent(oldApiTag), "&sort=").concat(oldApiSort, "&page_limit=").concat(window.homePageItemsPerTag, "&page_start=0");
+      const oldApiCacheKey = "".concat(cacheKeyPrefix, "old_").concat(encodeURIComponent(targetUrl));
+      console.log("[Home Page Waterfall] (".concat(useOnlyOldApi ? "Old API Mode Fallback" : "Old API Config", ') Preparing Old API fetch for section "').concat(tagConfig.title, '" (tag: ').concat(oldApiTag, ", type: ").concat(oldApiType, ", sort: ").concat(oldApiSort, ")"));
       data = await fetchAndCacheDoubanData(oldApiCacheKey, fetchDoubanData, targetUrl);
     }
     try {
@@ -197,14 +219,14 @@ async function loadNextBatchOfHomePageTags() {
           renderDoubanCardsAsCarousel(data, carouselTrack, tagConfig.type, tagConfig.apiTag);
         } else {
           console.error("renderDoubanCardsAsCarousel function not found");
-          carouselTrack.innerHTML = `<div class="text-red-400 p-4">UI Error</div>`;
+          carouselTrack.innerHTML = '<div class="text-red-400 p-4">UI Error</div>';
         }
       } else {
-        carouselTrack.innerHTML = `<div class="text-gray-400 p-4">${tagConfig.title}: 暂无内容</div>`;
+        carouselTrack.innerHTML = '<div class="text-gray-400 p-4">'.concat(tagConfig.title, ": 暂无内容</div>");
       }
     } catch (error) {
-      console.error(`处理豆瓣首页数据失败 (Title: ${tagConfig.title}):`, error);
-      carouselTrack.innerHTML = `<div class="text-red-400 p-4">❌ 加载 ${tagConfig.title} 失败</div>`;
+      console.error("处理豆瓣首页数据失败 (Title: ".concat(tagConfig.title, "):"), error);
+      carouselTrack.innerHTML = '<div class="text-red-400 p-4">❌ 加载 '.concat(tagConfig.title, " 失败</div>");
     }
   }
   if (bottomSpinner) {
@@ -274,7 +296,7 @@ function initHomePageDoubanContent() {
     }
     homePageActiveTags.push({
       title: ct.title,
-      apiParams: { ...ct.apiParams, range: `0,${window.homePageItemsPerTag}`, start: "0" },
+      apiParams: __spreadProps(__spreadValues({}, ct.apiParams), { range: "0,".concat(window.homePageItemsPerTag), start: "0" }),
       useNewApi: ct.title === "热门动画剧集" ? false : true,
       // Force Old API for "热门动画剧集" on homepage
       type: ct.typeForCatView,
@@ -284,15 +306,15 @@ function initHomePageDoubanContent() {
     });
   });
   const genreSections = [
-    { title: `科幻${currentMovieOrTvType}`, typeForCatView: currentMovieOrTvType, apiParams: { tags: currentMovieOrTvType, genres: "科幻", sort: newApiSortMap["评分"] } },
-    { title: `喜剧${currentMovieOrTvType}`, typeForCatView: currentMovieOrTvType, apiParams: { tags: currentMovieOrTvType, genres: "喜剧", sort: newApiSortMap["评分"] } },
-    { title: `动作${currentMovieOrTvType}`, typeForCatView: currentMovieOrTvType, apiParams: { tags: currentMovieOrTvType, genres: "动作", sort: newApiSortMap["热度"] } },
+    { title: "科幻".concat(currentMovieOrTvType), typeForCatView: currentMovieOrTvType, apiParams: { tags: currentMovieOrTvType, genres: "科幻", sort: newApiSortMap["评分"] } },
+    { title: "喜剧".concat(currentMovieOrTvType), typeForCatView: currentMovieOrTvType, apiParams: { tags: currentMovieOrTvType, genres: "喜剧", sort: newApiSortMap["评分"] } },
+    { title: "动作".concat(currentMovieOrTvType), typeForCatView: currentMovieOrTvType, apiParams: { tags: currentMovieOrTvType, genres: "动作", sort: newApiSortMap["热度"] } },
     { title: "美国科幻电影", typeForCatView: "电影", apiParams: { tags: "电影", genres: "科幻", countries: "美国", sort: newApiSortMap["评分"] } }
   ];
   genreSections.forEach((gs) => {
     homePageActiveTags.push({
       title: gs.title,
-      apiParams: { ...gs.apiParams, range: `0,${window.homePageItemsPerTag}`, start: "0" },
+      apiParams: __spreadProps(__spreadValues({}, gs.apiParams), { range: "0,".concat(window.homePageItemsPerTag), start: "0" }),
       // New API uses range
       useNewApi: true,
       type: gs.typeForCatView,
@@ -333,7 +355,7 @@ function initHomePageDoubanContent() {
   window.homePageActiveTags.push({ title: "最新上线", apiTag: "最新", apiSort: "time", type: window.doubanMovieTvCurrentSwitch, useNewApi: false });
   function getTagSourceKey(tagInfo) {
     if (tagInfo.isChart && tagInfo.chartGenreName) {
-      return `chart_${tagInfo.chartGenreName}`;
+      return "chart_".concat(tagInfo.chartGenreName);
     } else if (tagInfo.useNewApi && tagInfo.apiParams) {
       const sortedParams = {};
       Object.keys(tagInfo.apiParams).sort().forEach((key) => {
@@ -341,12 +363,12 @@ function initHomePageDoubanContent() {
           sortedParams[key] = tagInfo.apiParams[key];
         }
       });
-      return `new_${JSON.stringify(sortedParams)}`;
+      return "new_".concat(JSON.stringify(sortedParams));
     } else if (!tagInfo.useNewApi && tagInfo.apiTag && tagInfo.apiSort && tagInfo.type) {
-      return `old_${tagInfo.type}_${tagInfo.apiTag}_${tagInfo.apiSort}`;
+      return "old_".concat(tagInfo.type, "_").concat(tagInfo.apiTag, "_").concat(tagInfo.apiSort);
     }
     console.warn("[Douban Home] Tag missing key properties for source identification:", tagInfo.title, tagInfo);
-    return `title_${tagInfo.title}`;
+    return "title_".concat(tagInfo.title);
   }
   const finalHomePageActiveTags = [];
   const seenSourceKeys = /* @__PURE__ */ new Map();
@@ -355,33 +377,33 @@ function initHomePageDoubanContent() {
     if (!seenSourceKeys.has(sourceKey)) {
       finalHomePageActiveTags.push(tagInfo);
       seenSourceKeys.set(sourceKey, { index: finalHomePageActiveTags.length - 1, title: tagInfo.title, useNewApi: tagInfo.useNewApi });
-      console.log(`[Douban Home Dedupe] Adding: "${tagInfo.title}" (Key: ${sourceKey})`);
+      console.log('[Douban Home Dedupe] Adding: "'.concat(tagInfo.title, '" (Key: ').concat(sourceKey, ")"));
     } else {
       const existingEntry = seenSourceKeys.get(sourceKey);
       const existingTag = finalHomePageActiveTags[existingEntry.index];
-      console.log(`[Douban Home Dedupe] Duplicate sourceKey "${sourceKey}" for new tag "${tagInfo.title}". Existing: "${existingTag.title}".`);
+      console.log('[Douban Home Dedupe] Duplicate sourceKey "'.concat(sourceKey, '" for new tag "').concat(tagInfo.title, '". Existing: "').concat(existingTag.title, '".'));
       if (tagInfo.useNewApi && !existingTag.useNewApi) {
-        console.log(`[Douban Home Dedupe] Replacing "${existingTag.title}" with "${tagInfo.title}" (New API preferred).`);
+        console.log('[Douban Home Dedupe] Replacing "'.concat(existingTag.title, '" with "').concat(tagInfo.title, '" (New API preferred).'));
         finalHomePageActiveTags[existingEntry.index] = tagInfo;
         seenSourceKeys.set(sourceKey, { index: existingEntry.index, title: tagInfo.title, useNewApi: tagInfo.useNewApi });
       } else if (!tagInfo.useNewApi && existingTag.useNewApi) {
-        console.log(`[Douban Home Dedupe] Keeping "${existingTag.title}" (New API preferred over "${tagInfo.title}").`);
+        console.log('[Douban Home Dedupe] Keeping "'.concat(existingTag.title, '" (New API preferred over "').concat(tagInfo.title, '").'));
       } else {
         if (tagInfo.title === "热门推荐" && existingTag.title !== "热门推荐") {
-          console.log(`[Douban Home Dedupe] Skipping generic "热门推荐" as "${existingTag.title}" already covers key "${sourceKey}".`);
+          console.log('[Douban Home Dedupe] Skipping generic "热门推荐" as "'.concat(existingTag.title, '" already covers key "').concat(sourceKey, '".'));
         } else if (existingTag.title === "热门推荐" && tagInfo.title !== "热门推荐") {
-          console.log(`[Douban Home Dedupe] Replacing generic "${existingTag.title}" with more specific "${tagInfo.title}" for key "${sourceKey}".`);
+          console.log('[Douban Home Dedupe] Replacing generic "'.concat(existingTag.title, '" with more specific "').concat(tagInfo.title, '" for key "').concat(sourceKey, '".'));
           finalHomePageActiveTags[existingEntry.index] = tagInfo;
           seenSourceKeys.set(sourceKey, { index: existingEntry.index, title: tagInfo.title, useNewApi: tagInfo.useNewApi });
         } else {
-          console.log(`[Douban Home Dedupe] Keeping existing "${existingTag.title}" over "${tagInfo.title}" for key "${sourceKey}" (same API type, no strong preference or first one encountered).`);
+          console.log('[Douban Home Dedupe] Keeping existing "'.concat(existingTag.title, '" over "').concat(tagInfo.title, '" for key "').concat(sourceKey, '" (same API type, no strong preference or first one encountered).'));
         }
       }
     }
   }
   window.homePageActiveTags = finalHomePageActiveTags;
   console.log("[Douban Home] Final unique active tags count:", window.homePageActiveTags.length);
-  window.homePageActiveTags.forEach((tag) => console.log(`  - ${tag.title} (useNewApi: ${tag.useNewApi}, isChart: ${!!tag.isChart}, Key: ${getTagSourceKey(tag)})`));
+  window.homePageActiveTags.forEach((tag) => console.log("  - ".concat(tag.title, " (useNewApi: ").concat(tag.useNewApi, ", isChart: ").concat(!!tag.isChart, ", Key: ").concat(getTagSourceKey(tag), ")")));
   const RUSTYTV_SHUFFLED_TAG_ORDER_KEY = "rustyTvShuffledHomePageTagOrder";
   try {
     const storedOrderJson = sessionStorage.getItem(RUSTYTV_SHUFFLED_TAG_ORDER_KEY);
@@ -503,13 +525,13 @@ function initDouban(options = {}) {
     if (["综艺", "纪录片", "短片"].includes(ct)) return;
     commonGenres.forEach((genre) => {
       if (ct === "动画" && genre === "动画") return;
-      window.homepageTopNavTags.push({ title: `${genre}${ct}`, typeForCatView: ct, useNewApi: true, apiParams: { tags: ct, genres: genre, sort: newApiSortMap["热度"] } });
+      window.homepageTopNavTags.push({ title: "".concat(genre).concat(ct), typeForCatView: ct, useNewApi: true, apiParams: { tags: ct, genres: genre, sort: newApiSortMap["热度"] } });
     });
   });
   contentTypesForTags.forEach((ct) => {
     if (["综艺", "纪录片", "短片"].includes(ct)) return;
     commonCountries.forEach((country) => {
-      window.homepageTopNavTags.push({ title: `${country}${ct}`, typeForCatView: ct, useNewApi: true, apiParams: { tags: ct, countries: country, sort: newApiSortMap["热度"] } });
+      window.homepageTopNavTags.push({ title: "".concat(country).concat(ct), typeForCatView: ct, useNewApi: true, apiParams: { tags: ct, countries: country, sort: newApiSortMap["热度"] } });
     });
   });
   window.homepageTopNavTags.push({ title: "豆瓣高分电影", typeForCatView: "电影", useNewApi: true, apiParams: { tags: "电影", sort: newApiSortMap["评分"] } });
@@ -548,8 +570,8 @@ function initDouban(options = {}) {
     } else {
       apiParams.genres = tag;
     }
-    if (!["热门", "最新", ...contentTypesForTags].includes(tag)) {
-      window.homepageTopNavTags.push({ title: `${tag}电影`, typeForCatView: "电影", useNewApi: true, apiParams });
+    if (!["热门", "最新"].concat(contentTypesForTags).includes(tag)) {
+      window.homepageTopNavTags.push({ title: "".concat(tag, "电影"), typeForCatView: "电影", useNewApi: true, apiParams });
     }
   });
   const generalTvTags = ["经典", "国产剧", "港剧"];
@@ -559,8 +581,8 @@ function initDouban(options = {}) {
     if (tag === "国产剧") apiParams.countries = "中国大陆";
     else if (tag === "港剧") apiParams.countries = "香港";
     else apiParams.genres = tag;
-    if (!["热门", "最新", ...contentTypesForTags].includes(tag)) {
-      window.homepageTopNavTags.push({ title: `${tag}`, typeForCatView: "电视剧", useNewApi: true, apiParams });
+    if (!["热门", "最新"].concat(contentTypesForTags).includes(tag)) {
+      window.homepageTopNavTags.push({ title: "".concat(tag), typeForCatView: "电视剧", useNewApi: true, apiParams });
     }
   });
   const uniqueHomepageNavTags = [];
@@ -632,7 +654,7 @@ async function loadMoreCategoryItems(isInitialLoad = false) {
   let usingNewAPIForCategory = false;
   const useOnlyOldApiCategory = localStorage.getItem("doubanApiMode") !== "true";
   if (!useOnlyOldApiCategory && sourceTagConfig && sourceTagConfig.useNewApi && sourceTagConfig.apiParams) {
-    const paramsForNewApi = { ...sourceTagConfig.apiParams };
+    const paramsForNewApi = __spreadValues({}, sourceTagConfig.apiParams);
     paramsForNewApi.start = window.currentCategoryPageStart.toString();
     paramsForNewApi.range = "0,10";
     usingNewAPIForCategory = true;
@@ -659,16 +681,16 @@ async function loadMoreCategoryItems(isInitialLoad = false) {
       }
     }
     const doubanApiBase = "https://movie.douban.com";
-    url = `${doubanApiBase}/j/search_subjects?type=${typeForOldApi}&tag=${encodeURIComponent(apiTagForOld)}&sort=${apiSortForOld}&page_limit=${window.categoryItemsPerPage}&page_start=${window.currentCategoryPageStart}`;
-    console.log(`[CategoryView] (${useOnlyOldApiCategory ? "Old API Mode" : "Old API Config"}) Fetching: ${url}`);
+    url = "".concat(doubanApiBase, "/j/search_subjects?type=").concat(typeForOldApi, "&tag=").concat(encodeURIComponent(apiTagForOld), "&sort=").concat(apiSortForOld, "&page_limit=").concat(window.categoryItemsPerPage, "&page_start=").concat(window.currentCategoryPageStart);
+    console.log("[CategoryView] (".concat(useOnlyOldApiCategory ? "Old API Mode" : "Old API Config", ") Fetching: ").concat(url));
   }
   try {
     let data;
     if (usingNewAPIForCategory && !useOnlyOldApiCategory) {
-      const fetchParams = { ...sourceTagConfig.apiParams };
+      const fetchParams = __spreadValues({}, sourceTagConfig.apiParams);
       fetchParams.start = window.currentCategoryPageStart.toString();
       fetchParams.range = "0,10";
-      console.log(`[CategoryView] (New API Preferred) Fetching with params:`, fetchParams);
+      console.log("[CategoryView] (New API Preferred) Fetching with params:", fetchParams);
       data = await fetchNewDoubanSearch(fetchParams);
     } else {
       data = await fetchDoubanData(url);

@@ -68,7 +68,7 @@ async function handleApiRequest(url) {
         const statusCode = error.statusCode || 500;
         return new Response(JSON.stringify({
           code: statusCode,
-          msg: `服务器内部错误 (拦截器): ${error.message || "未知拦截器错误"}`,
+          msg: "服务器内部错误 (拦截器): ".concat(error.message || "未知拦截器错误"),
           list: [],
           episodes: []
         }), { status: statusCode, headers: { "Content-Type": "application/json" } });
@@ -79,7 +79,7 @@ async function handleApiRequest(url) {
 })();
 async function testSiteAvailability(apiUrl) {
   try {
-    const response = await fetch(`/api/search?wd=test&customApi=${encodeURIComponent(apiUrl)}&source=custom`);
+    const response = await fetch("/api/search?wd=test&customApi=".concat(encodeURIComponent(apiUrl), "&source=custom"));
     const responseText = await response.text();
     const data = JSON.parse(responseText);
     return data && data.code === 200 && Array.isArray(data.list);

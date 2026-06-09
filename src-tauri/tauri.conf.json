@@ -5,7 +5,8 @@
   "identifier": "com.libretv.app",
   "build": {
     "frontendDist": "../public",
-    "beforeDevCommand": ""
+    "beforeDevCommand": "npm run build:webview58",
+    "beforeBuildCommand": "npm run build:webview58"
   },
   "app": {
     "windows": [

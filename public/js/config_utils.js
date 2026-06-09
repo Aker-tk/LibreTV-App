@@ -22,7 +22,7 @@ async function importConfig() {
       }, 3e3);
     } catch (error) {
       const message = typeof error === "string" ? error : "配置文件格式错误";
-      showToast(`配置文件读取出错 (${message})`, "error");
+      showToast("配置文件读取出错 (".concat(message, ")"), "error");
     }
   });
 }

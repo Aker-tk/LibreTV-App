@@ -146,7 +146,7 @@ function renderCarouselRow(categoryTitle, tag, type, sort = "recommend", pageLim
   console.warn("renderCarouselRow called, but home page now uses waterfall. Check if this call is still needed.");
   const mainContainer = document.getElementById("douban-recommendations-container");
   if (!mainContainer) return;
-  const sectionId = `carousel-section-${type}-${categoryTitle.replace(/[^a-zA-Z0-9]/g, "-")}-${tag.replace(/[^a-zA-Z0-9]/g, "-")}`;
+  const sectionId = "carousel-section-".concat(type, "-").concat(categoryTitle.replace(/[^a-zA-Z0-9]/g, "-"), "-").concat(tag.replace(/[^a-zA-Z0-9]/g, "-"));
   let section = document.getElementById(sectionId);
   if (!section) {
     section = document.createElement("section");
@@ -155,33 +155,25 @@ function renderCarouselRow(categoryTitle, tag, type, sort = "recommend", pageLim
     mainContainer.appendChild(section);
   }
   const safeCategoryTitle = categoryTitle.replace(/</g, "<").replace(/>/g, ">");
-  section.innerHTML = `
-        <div class="flex justify-between items-center px-1">
-            <h2 class="text-xl font-semibold text-white">${safeCategoryTitle}</h2>
-        </div>
-        <div class="carousel-container overflow-x-auto pb-2">
-            <div id="carousel-track-${sectionId}" class="carousel-track flex space-x-3">
-                <div class="text-gray-400 p-4">加载中...</div>
-            </div>
-        </div>`;
-  const carouselTrack = section.querySelector(`#carousel-track-${sectionId}`);
+  section.innerHTML = '\n        <div class="flex justify-between items-center px-1">\n            <h2 class="text-xl font-semibold text-white">'.concat(safeCategoryTitle, '</h2>\n        </div>\n        <div class="carousel-container overflow-x-auto pb-2">\n            <div id="carousel-track-').concat(sectionId, '" class="carousel-track flex space-x-3">\n                <div class="text-gray-400 p-4">加载中...</div>\n            </div>\n        </div>');
+  const carouselTrack = section.querySelector("#carousel-track-".concat(sectionId));
   const doubanApiBase = "https://movie.douban.com";
-  const targetUrl = `${doubanApiBase}/j/search_subjects?type=${type}&tag=${encodeURIComponent(tag)}&sort=${sort}&page_limit=${pageLimit}&page_start=${pageStart}`;
+  const targetUrl = "".concat(doubanApiBase, "/j/search_subjects?type=").concat(type, "&tag=").concat(encodeURIComponent(tag), "&sort=").concat(sort, "&page_limit=").concat(pageLimit, "&page_start=").concat(pageStart);
   if (typeof fetchDoubanData === "function") {
     fetchDoubanData(targetUrl).then((data) => renderDoubanCardsAsCarousel(data, carouselTrack, type, tag)).catch((error) => {
-      console.error(`获取豆瓣数据失败 (Category: ${categoryTitle}, Tag: ${tag}, Type: ${type}, URL: ${targetUrl}):`, error);
-      if (carouselTrack) carouselTrack.innerHTML = `<div class="text-red-400 p-4">❌ 加载 ${safeCategoryTitle} 失败</div>`;
+      console.error("获取豆瓣数据失败 (Category: ".concat(categoryTitle, ", Tag: ").concat(tag, ", Type: ").concat(type, ", URL: ").concat(targetUrl, "):"), error);
+      if (carouselTrack) carouselTrack.innerHTML = '<div class="text-red-400 p-4">❌ 加载 '.concat(safeCategoryTitle, " 失败</div>");
     });
   } else {
     console.error("fetchDoubanData function not available in douban_ui.js for renderCarouselRow");
-    if (carouselTrack) carouselTrack.innerHTML = `<div class="text-red-400 p-4">❌ 加载 ${safeCategoryTitle} 失败 (API Error)</div>`;
+    if (carouselTrack) carouselTrack.innerHTML = '<div class="text-red-400 p-4">❌ 加载 '.concat(safeCategoryTitle, " 失败 (API Error)</div>");
   }
 }
 function renderDoubanCardsAsCarousel(data, carouselTrackElement, type, tagForContext) {
   if (!carouselTrackElement) return;
   const fragment = document.createDocumentFragment();
   if (!data || !data.subjects || !Array.isArray(data.subjects) || data.subjects.length === 0) {
-    carouselTrackElement.innerHTML = `<div class="text-gray-400 p-4">暂无内容</div>`;
+    carouselTrackElement.innerHTML = '<div class="text-gray-400 p-4">暂无内容</div>';
     return;
   }
   data.subjects.forEach((item) => {
@@ -197,25 +189,7 @@ function renderDoubanCardsAsCarousel(data, carouselTrackElement, type, tagForCon
     if (typeof PROXY_URL !== "undefined" && PROXY_URL && item.cover) {
       proxiedCoverUrl = PROXY_URL + encodeURIComponent(item.cover);
     }
-    card.innerHTML = `
-            <div class="relative w-full aspect-[2/3] overflow-hidden cursor-pointer" onclick="fillAndSearchWithDouban('${safeTitle}')">
-                <img src="${originalCoverUrl}" alt="${safeTitle}" 
-                    class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                    onerror="this.onerror=null; this.src='${proxiedCoverUrl}'; this.classList.add('object-contain');"
-                    loading="lazy" referrerpolicy="no-referrer">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                    <span class="text-yellow-400">★</span> ${safeRate}
-                </div>
-            </div>
-            <div class="p-1.5 text-center bg-[#111]">
-                <button onclick="fillAndSearchWithDouban('${safeTitle}')" 
-                        class="text-xs font-medium text-white truncate w-full hover:text-pink-400 transition leading-tight"
-                        title="${safeTitle}">
-                    ${safeTitle}
-                </button>
-            </div>
-        `;
+    card.innerHTML = '\n            <div class="relative w-full aspect-[2/3] overflow-hidden cursor-pointer" onclick="fillAndSearchWithDouban(\''.concat(safeTitle, '\')">\n                <img src="').concat(originalCoverUrl, '" alt="').concat(safeTitle, '" \n                    class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"\n                    onerror="this.onerror=null; this.src=\'').concat(proxiedCoverUrl, '\'; this.classList.add(\'object-contain\');"\n                    loading="lazy" referrerpolicy="no-referrer">\n                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>\n                <div class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">\n                    <span class="text-yellow-400">★</span> ').concat(safeRate, '\n                </div>\n            </div>\n            <div class="p-1.5 text-center bg-[#111]">\n                <button onclick="fillAndSearchWithDouban(\'').concat(safeTitle, '\')" \n                        class="text-xs font-medium text-white truncate w-full hover:text-pink-400 transition leading-tight"\n                        title="').concat(safeTitle, '">\n                    ').concat(safeTitle, "\n                </button>\n            </div>\n        ");
     fragment.appendChild(card);
   });
   carouselTrackElement.innerHTML = "";
@@ -243,23 +217,7 @@ function renderCategoryGridCards(data, gridContainer) {
     if (typeof PROXY_URL !== "undefined" && PROXY_URL && (item.cover_url || item.cover)) {
       proxiedCoverUrl = PROXY_URL + encodeURIComponent(item.cover_url || item.cover);
     }
-    card.innerHTML = `
-            <div class="relative w-full aspect-[2/3] overflow-hidden" onclick="fillAndSearchWithDouban('${safeTitle}')">
-                <img src="${coverImage}" alt="${safeTitle}" 
-                     class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                     onerror="this.onerror=null; this.src='${proxiedCoverUrl}'; this.classList.add('object-contain');"
-                     loading="lazy" referrerpolicy="no-referrer">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                    <span class="text-yellow-400">★</span> ${safeRate}
-                </div>
-            </div>
-            <div class="p-2 text-center flex-grow flex flex-col justify-between bg-[#111]">
-                <h3 class="text-sm font-medium text-white truncate w-full hover:text-pink-400 transition leading-tight" title="${safeTitle}" onclick="fillAndSearchWithDouban('${safeTitle}')">
-                    ${safeTitle}
-                </h3>
-            </div>
-        `;
+    card.innerHTML = '\n            <div class="relative w-full aspect-[2/3] overflow-hidden" onclick="fillAndSearchWithDouban(\''.concat(safeTitle, '\')">\n                <img src="').concat(coverImage, '" alt="').concat(safeTitle, '" \n                     class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"\n                     onerror="this.onerror=null; this.src=\'').concat(proxiedCoverUrl, '\'; this.classList.add(\'object-contain\');"\n                     loading="lazy" referrerpolicy="no-referrer">\n                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>\n                <div class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">\n                    <span class="text-yellow-400">★</span> ').concat(safeRate, '\n                </div>\n            </div>\n            <div class="p-2 text-center flex-grow flex flex-col justify-between bg-[#111]">\n                <h3 class="text-sm font-medium text-white truncate w-full hover:text-pink-400 transition leading-tight" title="').concat(safeTitle, '" onclick="fillAndSearchWithDouban(\'').concat(safeTitle, "')\">\n                    ").concat(safeTitle, "\n                </h3>\n            </div>\n        ");
     fragment.appendChild(card);
   });
   gridContainer.appendChild(fragment);
@@ -283,23 +241,7 @@ function renderDoubanSearchResultsGrid(data, gridContainer) {
     if (typeof PROXY_URL !== "undefined" && PROXY_URL && (item.cover_url || item.cover)) {
       proxiedCoverUrl = PROXY_URL + encodeURIComponent(item.cover_url || item.cover);
     }
-    card.innerHTML = `
-            <div class="relative w-full aspect-[2/3] overflow-hidden" onclick="fillAndSearchWithDouban('${safeTitle}')">
-                <img src="${coverImage}" alt="${safeTitle}" 
-                     class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                     onerror="this.onerror=null; this.src='${proxiedCoverUrl}'; this.classList.add('object-contain');"
-                     loading="lazy" referrerpolicy="no-referrer">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
-                <div class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">
-                    <span class="text-yellow-400">★</span> ${safeRate}
-                </div>
-            </div>
-            <div class="p-2 text-center flex-grow flex flex-col justify-between bg-[#111]">
-                <h3 class="text-sm font-medium text-white truncate w-full hover:text-pink-400 transition leading-tight" title="${safeTitle}" onclick="fillAndSearchWithDouban('${safeTitle}')">
-                    ${safeTitle}
-                </h3>
-            </div>
-        `;
+    card.innerHTML = '\n            <div class="relative w-full aspect-[2/3] overflow-hidden" onclick="fillAndSearchWithDouban(\''.concat(safeTitle, '\')">\n                <img src="').concat(coverImage, '" alt="').concat(safeTitle, '" \n                     class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"\n                     onerror="this.onerror=null; this.src=\'').concat(proxiedCoverUrl, '\'; this.classList.add(\'object-contain\');"\n                     loading="lazy" referrerpolicy="no-referrer">\n                <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>\n                <div class="absolute bottom-1 left-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded">\n                    <span class="text-yellow-400">★</span> ').concat(safeRate, '\n                </div>\n            </div>\n            <div class="p-2 text-center flex-grow flex flex-col justify-between bg-[#111]">\n                <h3 class="text-sm font-medium text-white truncate w-full hover:text-pink-400 transition leading-tight" title="').concat(safeTitle, '" onclick="fillAndSearchWithDouban(\'').concat(safeTitle, "')\">\n                    ").concat(safeTitle, "\n                </h3>\n            </div>\n        ");
     fragment.appendChild(card);
   });
   gridContainer.appendChild(fragment);
