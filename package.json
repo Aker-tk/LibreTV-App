@@ -8,7 +8,10 @@
     "dev": "npx tauri dev",
     "tauri": "tauri",
     "serve:public": "serve public -l 3000 -s",
-    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/styles.css --minify"
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/styles.css --minify",
+    "build:webview74": "node ./scripts/transpile-webview74.mjs",
+    "check:webview74": "node ./scripts/check-android10-compat.mjs",
+    "test:webview74-check": "node ./scripts/check-android10-compat.test.mjs"
   },
   "dependencies": {
     "axios": "^1.9.0",
@@ -19,8 +22,11 @@
   "author": "bestZwei",
   "license": "MIT",
   "devDependencies": {
+    "@tailwindcss/cli": "^4.3.0",
     "@tauri-apps/cli": "2.5.0",
+    "acorn": "^8.16.0",
     "autoprefixer": "^10.4.21",
+    "esbuild": "^0.28.0",
     "postcss": "^8.5.3",
     "serve": "^14.2.4",
     "tailwindcss": "^4.1.7"

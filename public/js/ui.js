@@ -1,222 +1,152 @@
-// UI相关函数
 function toggleSettings(e) {
-    // 密码保护校验
-    if (window.isPasswordProtected && window.isPasswordVerified) {
-        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-            showPasswordModal && showPasswordModal();
-            return;
-        }
+  if (window.isPasswordProtected && window.isPasswordVerified) {
+    if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+      showPasswordModal && showPasswordModal();
+      return;
     }
-    // 阻止事件冒泡，防止触发document的点击事件
-    e && e.stopPropagation();
-    const panel = document.getElementById('settingsPanel');
-    panel.classList.toggle('show');
+  }
+  e && e.stopPropagation();
+  const panel = document.getElementById("settingsPanel");
+  panel.classList.toggle("show");
 }
-
-// 改进的Toast显示函数 - 支持队列显示多个Toast
 const toastQueue = [];
 let isShowingToast = false;
-
-function showToast(message, type = 'error') {
-    // 首先确保toast元素存在
-    let toast = document.getElementById('toast');
-    let toastMessage = document.getElementById('toastMessage');
-    
-    // 如果toast元素不存在，创建它
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast';
-        toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 z-50 opacity-0';
-        
-        toastMessage = document.createElement('p');
-        toastMessage.id = 'toastMessage';
-        toast.appendChild(toastMessage);
-        
-        document.body.appendChild(toast);
-    }
-    
-    // 将新的toast添加到队列
-    toastQueue.push({ message, type });
-    
-    // 如果当前没有显示中的toast，则开始显示
-    if (!isShowingToast) {
-        showNextToast();
-    }
+function showToast(message, type = "error") {
+  let toast = document.getElementById("toast");
+  let toastMessage = document.getElementById("toastMessage");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.className = "fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 z-50 opacity-0";
+    toastMessage = document.createElement("p");
+    toastMessage.id = "toastMessage";
+    toast.appendChild(toastMessage);
+    document.body.appendChild(toast);
+  }
+  toastQueue.push({ message, type });
+  if (!isShowingToast) {
+    showNextToast();
+  }
 }
-
 function showNextToast() {
-    if (toastQueue.length === 0) {
-        isShowingToast = false;
-        return;
-    }
-    
-    isShowingToast = true;
-    const { message, type } = toastQueue.shift();
-    
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
-    
-    const bgColors = {
-        'error': 'bg-red-500',
-        'success': 'bg-green-500',
-        'info': 'bg-blue-500',
-        'warning': 'bg-yellow-500'
-    };
-    
-    const bgColor = bgColors[type] || bgColors.error;
-    toast.className = `fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 ${bgColor} text-white z-50`;
-    toastMessage.textContent = message;
-    
-    // 显示提示
-    toast.style.opacity = '1';
-    toast.style.transform = 'translateX(-50%) translateY(0)';
-    
-    // 3秒后自动隐藏
+  if (toastQueue.length === 0) {
+    isShowingToast = false;
+    return;
+  }
+  isShowingToast = true;
+  const { message, type } = toastQueue.shift();
+  const toast = document.getElementById("toast");
+  const toastMessage = document.getElementById("toastMessage");
+  const bgColors = {
+    "error": "bg-red-500",
+    "success": "bg-green-500",
+    "info": "bg-blue-500",
+    "warning": "bg-yellow-500"
+  };
+  const bgColor = bgColors[type] || bgColors.error;
+  toast.className = `fixed top-4 left-1/2 -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 ${bgColor} text-white z-50`;
+  toastMessage.textContent = message;
+  toast.style.opacity = "1";
+  toast.style.transform = "translateX(-50%) translateY(0)";
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(-50%) translateY(-100%)";
     setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(-50%) translateY(-100%)';
-        
-        // 等待动画完成后显示下一个toast
-        setTimeout(() => {
-            showNextToast();
-        }, 300);
-    }, 3000);
+      showNextToast();
+    }, 300);
+  }, 3e3);
 }
-
-// 添加显示/隐藏 loading 的函数
 let loadingTimeoutId = null;
-
-function showLoading(message = '加载中...') {
-    // 清除任何现有的超时
-    if (loadingTimeoutId) {
-        clearTimeout(loadingTimeoutId);
-    }
-    
-    const loading = document.getElementById('loading');
-    const messageEl = loading.querySelector('p');
-    messageEl.textContent = message;
-    loading.style.display = 'flex';
-    
-    // 设置30秒后自动关闭loading，防止无限loading
-    loadingTimeoutId = setTimeout(() => {
-        hideLoading();
-        showToast('操作超时，请稍后重试', 'warning');
-    }, 30000);
+function showLoading(message = "加载中...") {
+  if (loadingTimeoutId) {
+    clearTimeout(loadingTimeoutId);
+  }
+  const loading = document.getElementById("loading");
+  const messageEl = loading.querySelector("p");
+  messageEl.textContent = message;
+  loading.style.display = "flex";
+  loadingTimeoutId = setTimeout(() => {
+    hideLoading();
+    showToast("操作超时，请稍后重试", "warning");
+  }, 3e4);
 }
-
 function hideLoading() {
-    // 清除超时
-    if (loadingTimeoutId) {
-        clearTimeout(loadingTimeoutId);
-        loadingTimeoutId = null;
-    }
-    
-    const loading = document.getElementById('loading');
-    loading.style.display = 'none';
+  if (loadingTimeoutId) {
+    clearTimeout(loadingTimeoutId);
+    loadingTimeoutId = null;
+  }
+  const loading = document.getElementById("loading");
+  loading.style.display = "none";
 }
-
 function updateSiteStatus(isAvailable) {
-    const statusEl = document.getElementById('siteStatus');
-    if (isAvailable) {
-        statusEl.innerHTML = '<span class="text-green-500">●</span> 可用';
-    } else {
-        statusEl.innerHTML = '<span class="text-red-500">●</span> 不可用';
-    }
+  const statusEl = document.getElementById("siteStatus");
+  if (isAvailable) {
+    statusEl.innerHTML = '<span class="text-green-500">●</span> 可用';
+  } else {
+    statusEl.innerHTML = '<span class="text-red-500">●</span> 不可用';
+  }
 }
-
 function closeModal() {
-    document.getElementById('modal').classList.add('hidden');
-    // 清除 iframe 内容
-    document.getElementById('modalContent').innerHTML = '';
+  document.getElementById("modal").classList.add("hidden");
+  document.getElementById("modalContent").innerHTML = "";
 }
-
-// 获取搜索历史的增强版本 - 支持新旧格式
 function getSearchHistory() {
-    try {
-        const data = localStorage.getItem(SEARCH_HISTORY_KEY);
-        if (!data) return [];
-        
-        const parsed = JSON.parse(data);
-        
-        // 检查是否是数组
-        if (!Array.isArray(parsed)) return [];
-        
-        // 支持旧格式（字符串数组）和新格式（对象数组）
-        return parsed.map(item => {
-            if (typeof item === 'string') {
-                return { text: item, timestamp: 0 };
-            }
-            return item;
-        }).filter(item => item && item.text);
-    } catch (e) {
-        console.error('获取搜索历史出错:', e);
-        return [];
-    }
+  try {
+    const data = localStorage.getItem(SEARCH_HISTORY_KEY);
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item) => {
+      if (typeof item === "string") {
+        return { text: item, timestamp: 0 };
+      }
+      return item;
+    }).filter((item) => item && item.text);
+  } catch (e) {
+    console.error("获取搜索历史出错:", e);
+    return [];
+  }
 }
-
-// 保存搜索历史的增强版本 - 添加时间戳和最大数量限制，现在缓存2个月
 function saveSearchHistory(query) {
-    if (!query || !query.trim()) return;
-    
-    // 清理输入，防止XSS
-    query = query.trim().substring(0, 50).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    
-    let history = getSearchHistory();
-    
-    // 获取当前时间
-    const now = Date.now();
-    
-    // 过滤掉超过2个月的记录（约60天，60*24*60*60*1000 = 5184000000毫秒）
-    history = history.filter(item => 
-        typeof item === 'object' && item.timestamp && (now - item.timestamp < 5184000000)
-    );
-    
-    // 删除已存在的相同项
-    history = history.filter(item => 
-        typeof item === 'object' ? item.text !== query : item !== query
-    );
-    
-    // 新项添加到开头，包含时间戳
-    history.unshift({
-        text: query,
-        timestamp: now
-    });
-    
-    // 限制历史记录数量
-    if (history.length > MAX_HISTORY_ITEMS) {
-        history = history.slice(0, MAX_HISTORY_ITEMS);
-    }
-    
+  if (!query || !query.trim()) return;
+  query = query.trim().substring(0, 50).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  let history = getSearchHistory();
+  const now = Date.now();
+  history = history.filter(
+    (item) => typeof item === "object" && item.timestamp && now - item.timestamp < 5184e6
+  );
+  history = history.filter(
+    (item) => typeof item === "object" ? item.text !== query : item !== query
+  );
+  history.unshift({
+    text: query,
+    timestamp: now
+  });
+  if (history.length > MAX_HISTORY_ITEMS) {
+    history = history.slice(0, MAX_HISTORY_ITEMS);
+  }
+  try {
+    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
+  } catch (e) {
+    console.error("保存搜索历史失败:", e);
     try {
-        localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history));
-    } catch (e) {
-        console.error('保存搜索历史失败:', e);
-        // 如果存储失败（可能是localStorage已满），尝试清理旧数据
-        try {
-            localStorage.removeItem(SEARCH_HISTORY_KEY);
-            localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history.slice(0, 3)));
-        } catch (e2) {
-            console.error('再次保存搜索历史失败:', e2);
-        }
+      localStorage.removeItem(SEARCH_HISTORY_KEY);
+      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(history.slice(0, 3)));
+    } catch (e2) {
+      console.error("再次保存搜索历史失败:", e2);
     }
-    
-    renderSearchHistory();
+  }
+  renderSearchHistory();
 }
-
-// 渲染最近搜索历史的增强版本
 function renderSearchHistory() {
-    const historyContainer = document.getElementById('recentSearches');
-    if (!historyContainer) return;
-    
-    const history = getSearchHistory();
-    
-    if (history.length === 0) {
-        historyContainer.innerHTML = '';
-        return;
-    }
-    
-    // 创建一个包含标题和清除按钮的行
-    historyContainer.innerHTML = `
+  const historyContainer = document.getElementById("recentSearches");
+  if (!historyContainer) return;
+  const history = getSearchHistory();
+  if (history.length === 0) {
+    historyContainer.innerHTML = "";
+    return;
+  }
+  historyContainer.innerHTML = `
         <div class="flex justify-between items-center w-full mb-2">
             <div class="text-gray-500">最近搜索:</div>
             <button id="clearHistoryBtn" class="text-gray-500 hover:text-white transition-colors" 
@@ -225,153 +155,107 @@ function renderSearchHistory() {
             </button>
         </div>
     `;
-    
-    history.forEach(item => {
-        const tag = document.createElement('button');
-        tag.className = 'search-tag';
-        tag.textContent = item.text;
-        
-        // 添加时间提示（如果有时间戳）
-        if (item.timestamp) {
-            const date = new Date(item.timestamp);
-            tag.title = `搜索于: ${date.toLocaleString()}`;
-        }
-        
-        tag.onclick = function() {
-            document.getElementById('searchInput').value = item.text;
-            search();
-        };
-        historyContainer.appendChild(tag);
-    });
+  history.forEach((item) => {
+    const tag = document.createElement("button");
+    tag.className = "search-tag";
+    tag.textContent = item.text;
+    if (item.timestamp) {
+      const date = new Date(item.timestamp);
+      tag.title = `搜索于: ${date.toLocaleString()}`;
+    }
+    tag.onclick = function() {
+      document.getElementById("searchInput").value = item.text;
+      search();
+    };
+    historyContainer.appendChild(tag);
+  });
 }
-
-// 增加清除搜索历史功能
 function clearSearchHistory() {
-    // 密码保护校验
-    if (window.isPasswordProtected && window.isPasswordVerified) {
-        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-            showPasswordModal && showPasswordModal();
-            return;
-        }
+  if (window.isPasswordProtected && window.isPasswordVerified) {
+    if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+      showPasswordModal && showPasswordModal();
+      return;
     }
-    try {
-        localStorage.removeItem(SEARCH_HISTORY_KEY);
-        renderSearchHistory();
-        showToast('搜索历史已清除', 'success');
-    } catch (e) {
-        console.error('清除搜索历史失败:', e);
-        showToast('清除搜索历史失败:', 'error');
-    }
+  }
+  try {
+    localStorage.removeItem(SEARCH_HISTORY_KEY);
+    renderSearchHistory();
+    showToast("搜索历史已清除", "success");
+  } catch (e) {
+    console.error("清除搜索历史失败:", e);
+    showToast("清除搜索历史失败:", "error");
+  }
 }
-
-// 历史面板相关函数
 function toggleHistory(e) {
-    // 密码保护校验
-    if (window.isPasswordProtected && window.isPasswordVerified) {
-        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-            showPasswordModal && showPasswordModal();
-            return;
-        }
+  if (window.isPasswordProtected && window.isPasswordVerified) {
+    if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+      showPasswordModal && showPasswordModal();
+      return;
     }
-    if (e) e.stopPropagation();
-    
-    const panel = document.getElementById('historyPanel');
-    if (panel) {
-        panel.classList.toggle('show');
-        
-        // 如果打开了历史记录面板，则加载历史数据
-        if (panel.classList.contains('show')) {
-            loadViewingHistory();
-        }
-        
-        // 如果设置面板是打开的，则关闭它
-        const settingsPanel = document.getElementById('settingsPanel');
-        if (settingsPanel && settingsPanel.classList.contains('show')) {
-            settingsPanel.classList.remove('show');
-        }
+  }
+  if (e) e.stopPropagation();
+  const panel = document.getElementById("historyPanel");
+  if (panel) {
+    panel.classList.toggle("show");
+    if (panel.classList.contains("show")) {
+      loadViewingHistory();
     }
+    const settingsPanel = document.getElementById("settingsPanel");
+    if (settingsPanel && settingsPanel.classList.contains("show")) {
+      settingsPanel.classList.remove("show");
+    }
+  }
 }
-
-// 格式化时间戳为友好的日期时间格式
 function formatTimestamp(timestamp) {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diff = now - date;
-    
-    // 小于1小时，显示"X分钟前"
-    if (diff < 3600000) {
-        const minutes = Math.floor(diff / 60000);
-        return minutes <= 0 ? '刚刚' : `${minutes}分钟前`;
-    }
-    
-    // 小于24小时，显示"X小时前"
-    if (diff < 86400000) {
-        const hours = Math.floor(diff / 3600000);
-        return `${hours}小时前`;
-    }
-    
-    // 小于7天，显示"X天前"
-    if (diff < 604800000) {
-        const days = Math.floor(diff / 86400000);
-        return `${days}天前`;
-    }
-    
-    // 其他情况，显示完整日期
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const hour = date.getHours().toString().padStart(2, '0');
-    const minute = date.getMinutes().toString().padStart(2, '0');
-    
-    return `${year}-${month}-${day} ${hour}:${minute}`;
+  const date = new Date(timestamp);
+  const now = /* @__PURE__ */ new Date();
+  const diff = now - date;
+  if (diff < 36e5) {
+    const minutes = Math.floor(diff / 6e4);
+    return minutes <= 0 ? "刚刚" : `${minutes}分钟前`;
+  }
+  if (diff < 864e5) {
+    const hours = Math.floor(diff / 36e5);
+    return `${hours}小时前`;
+  }
+  if (diff < 6048e5) {
+    const days = Math.floor(diff / 864e5);
+    return `${days}天前`;
+  }
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const hour = date.getHours().toString().padStart(2, "0");
+  const minute = date.getMinutes().toString().padStart(2, "0");
+  return `${year}-${month}-${day} ${hour}:${minute}`;
 }
-
-// 获取观看历史记录
 function getViewingHistory() {
-    try {
-        const data = localStorage.getItem('viewingHistory');
-        return data ? JSON.parse(data) : [];
-    } catch (e) {
-        console.error('获取观看历史失败:', e);
-        return [];
-    }
+  try {
+    const data = localStorage.getItem("viewingHistory");
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.error("获取观看历史失败:", e);
+    return [];
+  }
 }
-
-// 加载观看历史并渲染
 function loadViewingHistory() {
-    const historyList = document.getElementById('historyList');
-    if (!historyList) return;
-    
-    const history = getViewingHistory();
-    
-    if (history.length === 0) {
-        historyList.innerHTML = `<div class="text-center text-gray-500 py-8">暂无观看记录</div>`;
-        return;
-    }
-    
-    // 渲染历史记录
-    historyList.innerHTML = history.map(item => {
-        // 防止XSS
-        const safeTitle = item.title
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
-        
-        const safeSource = item.sourceName ? 
-            item.sourceName.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : 
-            '未知来源';
-            
-        const episodeText = item.episodeIndex !== undefined ? 
-            `第${item.episodeIndex + 1}集` : '';
-        
-        // 格式化进度信息
-        let progressHtml = '';
-        if (item.playbackPosition && item.duration && item.playbackPosition > 10 && item.playbackPosition < item.duration * 0.95) {
-            const percent = Math.round((item.playbackPosition / item.duration) * 100);
-            const formattedTime = formatPlaybackTime(item.playbackPosition);
-            const formattedDuration = formatPlaybackTime(item.duration);
-            
-            progressHtml = `
+  const historyList = document.getElementById("historyList");
+  if (!historyList) return;
+  const history = getViewingHistory();
+  if (history.length === 0) {
+    historyList.innerHTML = `<div class="text-center text-gray-500 py-8">暂无观看记录</div>`;
+    return;
+  }
+  historyList.innerHTML = history.map((item) => {
+    const safeTitle = item.title.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const safeSource = item.sourceName ? item.sourceName.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : "未知来源";
+    const episodeText = item.episodeIndex !== void 0 ? `第${item.episodeIndex + 1}集` : "";
+    let progressHtml = "";
+    if (item.playbackPosition && item.duration && item.playbackPosition > 10 && item.playbackPosition < item.duration * 0.95) {
+      const percent = Math.round(item.playbackPosition / item.duration * 100);
+      const formattedTime = formatPlaybackTime(item.playbackPosition);
+      const formattedDuration = formatPlaybackTime(item.duration);
+      progressHtml = `
                 <div class="history-progress">
                     <div class="progress-bar">
                         <div class="progress-filled" style="width:${percent}%"></div>
@@ -379,13 +263,9 @@ function loadViewingHistory() {
                     <div class="progress-text">${formattedTime} / ${formattedDuration}</div>
                 </div>
             `;
-        }
-        
-        // 为防止XSS，使用encodeURIComponent编码URL
-        const safeURL = encodeURIComponent(item.url);
-        
-        // 构建历史记录项HTML，添加删除按钮，需要放在position:relative的容器中
-        return `
+    }
+    const safeURL = encodeURIComponent(item.url);
+    return `
             <div class="history-item cursor-pointer relative group" onclick="playFromHistory('${item.url}', '${safeTitle}', ${item.episodeIndex || 0}, ${item.playbackPosition || 0})">
                 <button onclick="event.stopPropagation(); deleteHistoryItem('${safeURL}')" 
                         class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-400 hover:text-red-400 p-1 rounded-full hover:bg-gray-800 z-10"
@@ -398,7 +278,7 @@ function loadViewingHistory() {
                     <div class="history-title">${safeTitle}</div>
                     <div class="history-meta">
                         <span class="history-episode">${episodeText}</span>
-                        ${episodeText ? '<span class="history-separator mx-1">·</span>' : ''}
+                        ${episodeText ? '<span class="history-separator mx-1">·</span>' : ""}
                         <span class="history-source">${safeSource}</span>
                     </div>
                     ${progressHtml}
@@ -406,673 +286,496 @@ function loadViewingHistory() {
                 </div>
             </div>
         `;
-    }).join('');
-    
-    // 检查是否存在较多历史记录，添加底部边距确保底部按钮不会挡住内容
-    if (history.length > 5) {
-        historyList.classList.add('pb-4');
-    }
+  }).join("");
+  if (history.length > 5) {
+    historyList.classList.add("pb-4");
+  }
 }
-
-// 格式化播放时间为 mm:ss 格式
 function formatPlaybackTime(seconds) {
-    if (!seconds || isNaN(seconds)) return '00:00';
-    
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  if (!seconds || isNaN(seconds)) return "00:00";
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
 }
-
-// 删除单个历史记录项
 function deleteHistoryItem(encodedUrl) {
-    try {
-        // 解码URL
-        const url = decodeURIComponent(encodedUrl);
-        
-        // 获取当前历史记录
-        const history = getViewingHistory();
-        
-        // 过滤掉要删除的项
-        const newHistory = history.filter(item => item.url !== url);
-        
-        // 保存回localStorage
-        localStorage.setItem('viewingHistory', JSON.stringify(newHistory));
-        
-        // 重新加载历史记录显示
-        loadViewingHistory();
-        
-        // 显示成功提示
-        showToast('已删除该记录', 'success');
-    } catch (e) {
-        console.error('删除历史记录项失败:', e);
-        showToast('删除记录失败', 'error');
-    }
+  try {
+    const url = decodeURIComponent(encodedUrl);
+    const history = getViewingHistory();
+    const newHistory = history.filter((item) => item.url !== url);
+    localStorage.setItem("viewingHistory", JSON.stringify(newHistory));
+    loadViewingHistory();
+    showToast("已删除该记录", "success");
+  } catch (e) {
+    console.error("删除历史记录项失败:", e);
+    showToast("删除记录失败", "error");
+  }
 }
-
-// 从历史记录播放
 function playFromHistory(url, title, episodeIndex, playbackPosition = 0) {
-    try {
-        // 尝试从localStorage获取当前视频的集数信息
-        let episodesList = [];
-        
-        // 检查viewingHistory，查找匹配的项以获取其集数数据
-        const historyRaw = localStorage.getItem('viewingHistory');
-        if (historyRaw) {
-            const history = JSON.parse(historyRaw);
-            // 根据标题查找匹配的历史记录
-            const historyItem = history.find(item => item.title === title);
-            
-            // 如果找到了匹配的历史记录，尝试获取该条目的集数数据
-            if (historyItem && historyItem.episodes && Array.isArray(historyItem.episodes)) {
-                episodesList = historyItem.episodes;
-                console.log(`从历史记录找到视频 ${title} 的集数数据:`, episodesList.length);
-            }
-        }
-        
-        // 如果在历史记录中没找到，尝试使用上一个会话的集数数据
-        if (episodesList.length === 0) {
-            try {
-                const storedEpisodes = JSON.parse(localStorage.getItem('currentEpisodes') || '[]');
-                if (storedEpisodes.length > 0) {
-                    episodesList = storedEpisodes;
-                    console.log(`使用localStorage中的集数数据:`, episodesList.length);
-                }
-            } catch (e) {
-                console.error('解析currentEpisodes失败:', e);
-            }
-        }
-        
-        // 将剧集列表保存到localStorage，避免过长的URL
-        if (episodesList.length > 0) {
-            localStorage.setItem('currentEpisodes', JSON.stringify(episodesList));
-            console.log(`已将剧集列表保存到localStorage，共 ${episodesList.length} 集`);
-        }
-        // 构造带播放进度参数的URL
-        const positionParam = playbackPosition > 10 ? `&position=${Math.floor(playbackPosition)}` : '';
-        
-        if (url.includes('?')) {
-            // URL已有参数，添加索引和位置参数
-            const playUrl = new URL(url);
-            if (!playUrl.searchParams.has('index') && episodeIndex > 0) {
-                playUrl.searchParams.set('index', episodeIndex);
-            }
-            if (playbackPosition > 10) {
-                playUrl.searchParams.set('position', Math.floor(playbackPosition).toString());
-            }
-            showVideoPlayer(playUrl.toString());
-        } else {
-            // 原始URL，构造player页面链接
-            const playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}${positionParam}`;
-            showVideoPlayer(playerUrl);
-        }
-    } catch (e) {
-        console.error('从历史记录播放失败:', e);
-        // 回退到原始简单URL
-        const simpleUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}`;
-        showVideoPlayer(simpleUrl);
+  try {
+    let episodesList = [];
+    const historyRaw = localStorage.getItem("viewingHistory");
+    if (historyRaw) {
+      const history = JSON.parse(historyRaw);
+      const historyItem = history.find((item) => item.title === title);
+      if (historyItem && historyItem.episodes && Array.isArray(historyItem.episodes)) {
+        episodesList = historyItem.episodes;
+        console.log(`从历史记录找到视频 ${title} 的集数数据:`, episodesList.length);
+      }
     }
+    if (episodesList.length === 0) {
+      try {
+        const storedEpisodes = JSON.parse(localStorage.getItem("currentEpisodes") || "[]");
+        if (storedEpisodes.length > 0) {
+          episodesList = storedEpisodes;
+          console.log(`使用localStorage中的集数数据:`, episodesList.length);
+        }
+      } catch (e) {
+        console.error("解析currentEpisodes失败:", e);
+      }
+    }
+    if (episodesList.length > 0) {
+      localStorage.setItem("currentEpisodes", JSON.stringify(episodesList));
+      console.log(`已将剧集列表保存到localStorage，共 ${episodesList.length} 集`);
+    }
+    const positionParam = playbackPosition > 10 ? `&position=${Math.floor(playbackPosition)}` : "";
+    if (url.includes("?")) {
+      const playUrl = new URL(url);
+      if (!playUrl.searchParams.has("index") && episodeIndex > 0) {
+        playUrl.searchParams.set("index", episodeIndex);
+      }
+      if (playbackPosition > 10) {
+        playUrl.searchParams.set("position", Math.floor(playbackPosition).toString());
+      }
+      showVideoPlayer(playUrl.toString());
+    } else {
+      const playerUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}${positionParam}`;
+      showVideoPlayer(playerUrl);
+    }
+  } catch (e) {
+    console.error("从历史记录播放失败:", e);
+    const simpleUrl = `player.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&index=${episodeIndex}`;
+    showVideoPlayer(simpleUrl);
+  }
 }
-
-// 添加观看历史 - 确保每个视频标题只有一条记录
 function addToViewingHistory(videoInfo) {
-    // 密码保护校验
-    if (window.isPasswordProtected && window.isPasswordVerified) {
-        if (window.isPasswordProtected() && !window.isPasswordVerified()) {
-            showPasswordModal && showPasswordModal();
-            return;
-        }
+  if (window.isPasswordProtected && window.isPasswordVerified) {
+    if (window.isPasswordProtected() && !window.isPasswordVerified()) {
+      showPasswordModal && showPasswordModal();
+      return;
     }
-    try {
-        const history = getViewingHistory();
-        
-        // 检查是否已经存在相同标题的记录（同一视频的不同集数）
-        const existingIndex = history.findIndex(item => item.title === videoInfo.title);
-        if (existingIndex !== -1) {
-            // 存在则更新现有记录的集数和时间戳
-            const existingItem = history[existingIndex];
-            existingItem.episodeIndex = videoInfo.episodeIndex;
-            existingItem.timestamp = Date.now();
-            
-            // 确保来源信息保留
-            if (videoInfo.sourceName && !existingItem.sourceName) {
-                existingItem.sourceName = videoInfo.sourceName;
-            }
-            
-            // 更新播放进度信息，仅当新进度有效且大于10秒时
-            if (videoInfo.playbackPosition && videoInfo.playbackPosition > 10) {
-                existingItem.playbackPosition = videoInfo.playbackPosition;
-                existingItem.duration = videoInfo.duration || existingItem.duration;
-            }
-            
-            // 更新URL，确保能够跳转到正确的集数
-            existingItem.url = videoInfo.url;
-            
-            // 重要：确保episodes数据与当前视频匹配
-            // 只有当videoInfo中包含有效的episodes数据时才更新
-            if (videoInfo.episodes && Array.isArray(videoInfo.episodes) && videoInfo.episodes.length > 0) {
-                // 如果传入的集数数据与当前保存的不同，则更新
-                if (!existingItem.episodes || 
-                    !Array.isArray(existingItem.episodes) || 
-                    existingItem.episodes.length !== videoInfo.episodes.length) {
-                    console.log(`更新 "${videoInfo.title}" 的剧集数据: ${videoInfo.episodes.length}集`);
-                    existingItem.episodes = [...videoInfo.episodes]; // 使用深拷贝
-                }
-            }
-            
-            // 移到最前面
-            history.splice(existingIndex, 1);
-            history.unshift(existingItem);
-        } else {
-            // 添加新记录到最前面，确保包含剧集数据
-            const newItem = {
-                ...videoInfo,
-                timestamp: Date.now()
-            };
-            
-            // 确保episodes字段是一个数组
-            if (videoInfo.episodes && Array.isArray(videoInfo.episodes)) {
-                newItem.episodes = [...videoInfo.episodes]; // 使用深拷贝
-                console.log(`保存新视频 "${videoInfo.title}" 的剧集数据: ${videoInfo.episodes.length}集`);
-            } else {
-                // 如果没有提供episodes，初始化为空数组
-                newItem.episodes = [];
-            }
-            
-            history.unshift(newItem);
+  }
+  try {
+    const history = getViewingHistory();
+    const existingIndex = history.findIndex((item) => item.title === videoInfo.title);
+    if (existingIndex !== -1) {
+      const existingItem = history[existingIndex];
+      existingItem.episodeIndex = videoInfo.episodeIndex;
+      existingItem.timestamp = Date.now();
+      if (videoInfo.sourceName && !existingItem.sourceName) {
+        existingItem.sourceName = videoInfo.sourceName;
+      }
+      if (videoInfo.playbackPosition && videoInfo.playbackPosition > 10) {
+        existingItem.playbackPosition = videoInfo.playbackPosition;
+        existingItem.duration = videoInfo.duration || existingItem.duration;
+      }
+      existingItem.url = videoInfo.url;
+      if (videoInfo.episodes && Array.isArray(videoInfo.episodes) && videoInfo.episodes.length > 0) {
+        if (!existingItem.episodes || !Array.isArray(existingItem.episodes) || existingItem.episodes.length !== videoInfo.episodes.length) {
+          console.log(`更新 "${videoInfo.title}" 的剧集数据: ${videoInfo.episodes.length}集`);
+          existingItem.episodes = [...videoInfo.episodes];
         }
-        
-        // 限制历史记录数量为50条
-        const maxHistoryItems = 50;
-        if (history.length > maxHistoryItems) {
-            history.splice(maxHistoryItems);
-        }
-        
-        // 保存到本地存储
-        localStorage.setItem('viewingHistory', JSON.stringify(history));
-    } catch (e) {
-        console.error('保存观看历史失败:', e);
+      }
+      history.splice(existingIndex, 1);
+      history.unshift(existingItem);
+    } else {
+      const newItem = {
+        ...videoInfo,
+        timestamp: Date.now()
+      };
+      if (videoInfo.episodes && Array.isArray(videoInfo.episodes)) {
+        newItem.episodes = [...videoInfo.episodes];
+        console.log(`保存新视频 "${videoInfo.title}" 的剧集数据: ${videoInfo.episodes.length}集`);
+      } else {
+        newItem.episodes = [];
+      }
+      history.unshift(newItem);
     }
+    const maxHistoryItems = 50;
+    if (history.length > maxHistoryItems) {
+      history.splice(maxHistoryItems);
+    }
+    localStorage.setItem("viewingHistory", JSON.stringify(history));
+  } catch (e) {
+    console.error("保存观看历史失败:", e);
+  }
 }
-
-// 清空观看历史
 function clearViewingHistory() {
-    try {
-        localStorage.removeItem('viewingHistory');
-        loadViewingHistory(); // 重新加载空的历史记录
-        showToast('观看历史已清空', 'success');
-    } catch (e) {
-        console.error('清除观看历史失败:', e);
-        showToast('清除观看历史失败', 'error');
-    }
+  try {
+    localStorage.removeItem("viewingHistory");
+    loadViewingHistory();
+    showToast("观看历史已清空", "success");
+  } catch (e) {
+    console.error("清除观看历史失败:", e);
+    showToast("清除观看历史失败", "error");
+  }
 }
-
-// 更新toggleSettings函数以处理历史面板互动
 const originalToggleSettings = toggleSettings;
 toggleSettings = function(e) {
-    if (e) e.stopPropagation();
-    
-    // 原始设置面板切换逻辑
-    originalToggleSettings(e);
-    
-    // 如果历史记录面板是打开的，则关闭它
-    const historyPanel = document.getElementById('historyPanel');
-    if (historyPanel && historyPanel.classList.contains('show')) {
-        historyPanel.classList.remove('show');
-    }
+  if (e) e.stopPropagation();
+  originalToggleSettings(e);
+  const historyPanel = document.getElementById("historyPanel");
+  if (historyPanel && historyPanel.classList.contains("show")) {
+    historyPanel.classList.remove("show");
+  }
 };
-
-// 点击外部关闭历史面板
-document.addEventListener('DOMContentLoaded', function() {
-    document.addEventListener('click', function(e) {
-        const historyPanel = document.getElementById('historyPanel');
-        const historyButton = document.querySelector('button[onclick="toggleHistory(event)"]');
-        
-        if (historyPanel && historyButton && 
-            !historyPanel.contains(e.target) && 
-            !historyButton.contains(e.target) && 
-            historyPanel.classList.contains('show')) {
-            historyPanel.classList.remove('show');
-        }
-    });
+document.addEventListener("DOMContentLoaded", function() {
+  document.addEventListener("click", function(e) {
+    const historyPanel = document.getElementById("historyPanel");
+    const historyButton = document.querySelector('button[onclick="toggleHistory(event)"]');
+    if (historyPanel && historyButton && !historyPanel.contains(e.target) && !historyButton.contains(e.target) && historyPanel.classList.contains("show")) {
+      historyPanel.classList.remove("show");
+    }
+  });
 });
-
-// --- Page State Preservation ---
-const HOME_PAGE_STATE_KEY = 'homePageState';
-const FILTER_PAGE_STATE_KEY = 'filterPageState';
-
+const HOME_PAGE_STATE_KEY = "homePageState";
+const FILTER_PAGE_STATE_KEY = "filterPageState";
 function getCurrentPageId() {
-    const activeNavItem = document.querySelector('#bottomNav .nav-item.active');
-    return activeNavItem ? activeNavItem.dataset.page : null;
+  const activeNavItem = document.querySelector("#bottomNav .nav-item.active");
+  return activeNavItem ? activeNavItem.dataset.page : null;
 }
-
 function saveHomePageState() {
-    // This function is called when the logical current tab is 'home'.
-    // It needs to determine if the main home page or the category view is active.
-    const categoryViewPage = document.getElementById('page-category-view');
-    const pageHome = document.getElementById('page-home'); // Still useful for main home content
-
-    let state = {
-        scrollTop: window.pageYOffset, // General scroll position
-        viewMode: 'main', // 'main' or 'category'
-    };
-
-    // const categoryViewPage = document.getElementById('page-category-view'); // Already declared at the top of the function
-    if (categoryViewPage && !categoryViewPage.classList.contains('hidden')) {
-        state.viewMode = 'category';
-        state.categoryViewTag = window.currentCategoryViewTag || null;
-        state.categoryViewType = window.currentCategoryViewType || null;
-        state.categorySourceConfig = window.currentCategorySourceConfig || null;
-        state.categoryPageStart = window.currentCategoryPageStart || 0;
-        const categoryGrid = document.getElementById('category-items-grid');
-        state.categoryGridHTML = categoryGrid ? categoryGrid.innerHTML : '';
-        state.categoryTitle = document.getElementById('category-view-title') ? document.getElementById('category-view-title').textContent : '';
-        // scrollTop is already window.pageYOffset, which applies to category view too
-    } else {
-        state.viewMode = 'main';
-        const recommendationsContainer = document.getElementById('douban-recommendations-container');
-        state.homePageHTML = recommendationsContainer ? recommendationsContainer.innerHTML : '';
-        state.homePageCurrentTagIndex = window.homePageCurrentTagIndex || 0;
-        state.homePageActiveTags = window.homePageActiveTags || []; // Ensure this is populated in douban_logic.js
-        state.noMoreHomePageTags = window.noMoreHomePageTags || false;
-    }
-    console.log('Saving Home Page State:', state);
-    sessionStorage.setItem(HOME_PAGE_STATE_KEY, JSON.stringify(state));
+  const categoryViewPage = document.getElementById("page-category-view");
+  const pageHome = document.getElementById("page-home");
+  let state = {
+    scrollTop: window.pageYOffset,
+    // General scroll position
+    viewMode: "main"
+    // 'main' or 'category'
+  };
+  if (categoryViewPage && !categoryViewPage.classList.contains("hidden")) {
+    state.viewMode = "category";
+    state.categoryViewTag = window.currentCategoryViewTag || null;
+    state.categoryViewType = window.currentCategoryViewType || null;
+    state.categorySourceConfig = window.currentCategorySourceConfig || null;
+    state.categoryPageStart = window.currentCategoryPageStart || 0;
+    const categoryGrid = document.getElementById("category-items-grid");
+    state.categoryGridHTML = categoryGrid ? categoryGrid.innerHTML : "";
+    state.categoryTitle = document.getElementById("category-view-title") ? document.getElementById("category-view-title").textContent : "";
+  } else {
+    state.viewMode = "main";
+    const recommendationsContainer = document.getElementById("douban-recommendations-container");
+    state.homePageHTML = recommendationsContainer ? recommendationsContainer.innerHTML : "";
+    state.homePageCurrentTagIndex = window.homePageCurrentTagIndex || 0;
+    state.homePageActiveTags = window.homePageActiveTags || [];
+    state.noMoreHomePageTags = window.noMoreHomePageTags || false;
+  }
+  console.log("Saving Home Page State:", state);
+  sessionStorage.setItem(HOME_PAGE_STATE_KEY, JSON.stringify(state));
 }
-
 function restoreHomePageState() {
-    const savedStateRaw = sessionStorage.getItem(HOME_PAGE_STATE_KEY);
-    if (!savedStateRaw) {
-        // No saved state, means we want a fresh main home page view.
-        return { scrollHandled: false, isCategoryView: false, forceMainView: true };
-    }
-
-    let result = { scrollHandled: false, isCategoryView: false, forceMainView: false };
-    try {
-        const state = JSON.parse(savedStateRaw);
-        console.log('Restoring Home Page State:', state);
-
-        if (state.viewMode === 'category') {
-            result.isCategoryView = true; // Mark that we are attempting to restore to category view
-            const categoryViewPage = document.getElementById('page-category-view');
-
-            if (typeof navigateToCategoryView === 'function' && state.categoryViewTag && state.categorySourceConfig) {
-                // No need to hide categoryViewPage here, navigateToTab will manage overall page visibility.
-                // navigateToCategoryView itself also manages visibility.
-
-
-                // Restore globals before calling navigateToCategoryView or its parts
-                window.currentCategoryViewTag = state.categoryViewTag;
-                window.currentCategoryViewType = state.categoryViewType;
-                window.currentCategorySourceConfig = state.categorySourceConfig;
-                window.currentCategoryPageStart = state.categoryPageStart;
-                // Restore noMoreCategoryItems and isLoadingCategoryItems from saved state if available, otherwise reset
-                window.noMoreCategoryItems = state.noMoreCategoryItems !== undefined ? state.noMoreCategoryItems : false;
-                window.isLoadingCategoryItems = false; // Always reset loading flag
-
-                // Ensure page-home is hidden and page-category-view is shown
-                const pageHome = document.getElementById('page-home');
-                if (pageHome) pageHome.classList.add('hidden');
-                if (categoryViewPage) categoryViewPage.classList.remove('hidden');
-                
-                const titleEl = document.getElementById('category-view-title');
-                if (titleEl && state.categoryTitle) titleEl.textContent = state.categoryTitle;
-                
-                const gridEl = document.getElementById('category-items-grid');
-                if (gridEl && state.categoryGridHTML) {
-                    gridEl.innerHTML = state.categoryGridHTML;
-                } else if (gridEl) {
-                    gridEl.innerHTML = ''; // Clear if no HTML
-                }
-                
-                // Ensure the correct "previousTab" is set for the back button on category view
-                sessionStorage.setItem('previousTab', 'home');
-                
-                // Update active nav item to 'home'
-                document.querySelectorAll('#bottomNav .nav-item').forEach(item => {
-                    item.classList.remove('active');
-                    if (item.dataset.page === 'home') {
-                        item.classList.add('active');
-                    }
-                });
-                sessionStorage.setItem('activeTab', 'home');
-
-
-            } else {
-                console.warn('State incomplete for category view restoration. Tag or SourceConfig missing.');
-                 // Fallback to main home view if category restoration fails
-                const pageHome = document.getElementById('page-home');
-                if (pageHome) pageHome.classList.remove('hidden'); // Show home
-                if (categoryViewPage) categoryViewPage.classList.add('hidden'); // Hide category
-                if (typeof initHomePageDoubanContent === 'function') { // Re-init main home
-                    initHomePageDoubanContent();
-                }
-                result.isCategoryView = false; // Failed to restore category view
-                return result; // scrollHandled is still false
-            }
-        } else { // viewMode === 'main'
-            result.isCategoryView = false;
-            // Ensure page-home is shown and page-category-view is hidden
-            const pageHome = document.getElementById('page-home');
-            const categoryViewPage = document.getElementById('page-category-view');
-            if (pageHome) pageHome.classList.remove('hidden');
-            if (categoryViewPage) categoryViewPage.classList.add('hidden');
-
-            const recommendationsContainer = document.getElementById('douban-recommendations-container');
-            if (recommendationsContainer && state.homePageHTML) {
-                recommendationsContainer.innerHTML = state.homePageHTML;
-                window.homePageCurrentTagIndex = state.homePageCurrentTagIndex;
-                window.homePageActiveTags = state.homePageActiveTags;
-                window.noMoreHomePageTags = state.noMoreHomePageTags;
-                window.isLoadingHomePageItems = false;
-
-                // Restore spinner if it was there and not "no more"
-                let bottomSpinner = document.getElementById('home-page-bottom-spinner');
-                if (state.homePageHTML.includes('home-page-bottom-spinner') && !state.noMoreHomePageTags) {
-                    if (!bottomSpinner && recommendationsContainer) {
-                         bottomSpinner = document.createElement('div');
-                         bottomSpinner.id = 'home-page-bottom-spinner';
-                         bottomSpinner.className = 'col-span-full text-center py-4';
-                         recommendationsContainer.appendChild(bottomSpinner);
-                    }
-                    if (bottomSpinner) {
-                        bottomSpinner.innerHTML = '<p class="text-gray-400">正在加载更多推荐...</p>';
-                        bottomSpinner.style.display = 'block';
-                    }
-                } else if (bottomSpinner && state.noMoreHomePageTags) {
-                     bottomSpinner.innerHTML = '<p class="text-gray-500">已加载全部推荐内容</p>';
-                } else if (bottomSpinner) {
-                    bottomSpinner.style.display = 'none';
-                }
-
-            } else {
-                 if (typeof initHomePageDoubanContent === 'function') {
-                    initHomePageDoubanContent(); // Fallback to re-init if HTML is missing
-                }
-            }
+  const savedStateRaw = sessionStorage.getItem(HOME_PAGE_STATE_KEY);
+  if (!savedStateRaw) {
+    return { scrollHandled: false, isCategoryView: false, forceMainView: true };
+  }
+  let result = { scrollHandled: false, isCategoryView: false, forceMainView: false };
+  try {
+    const state = JSON.parse(savedStateRaw);
+    console.log("Restoring Home Page State:", state);
+    if (state.viewMode === "category") {
+      result.isCategoryView = true;
+      const categoryViewPage = document.getElementById("page-category-view");
+      if (typeof navigateToCategoryView === "function" && state.categoryViewTag && state.categorySourceConfig) {
+        window.currentCategoryViewTag = state.categoryViewTag;
+        window.currentCategoryViewType = state.categoryViewType;
+        window.currentCategorySourceConfig = state.categorySourceConfig;
+        window.currentCategoryPageStart = state.categoryPageStart;
+        window.noMoreCategoryItems = state.noMoreCategoryItems !== void 0 ? state.noMoreCategoryItems : false;
+        window.isLoadingCategoryItems = false;
+        const pageHome = document.getElementById("page-home");
+        if (pageHome) pageHome.classList.add("hidden");
+        if (categoryViewPage) categoryViewPage.classList.remove("hidden");
+        const titleEl = document.getElementById("category-view-title");
+        if (titleEl && state.categoryTitle) titleEl.textContent = state.categoryTitle;
+        const gridEl = document.getElementById("category-items-grid");
+        if (gridEl && state.categoryGridHTML) {
+          gridEl.innerHTML = state.categoryGridHTML;
+        } else if (gridEl) {
+          gridEl.innerHTML = "";
         }
-        
-        if (typeof state.scrollTop === 'number') {
-            window.scrollTo(0, state.scrollTop);
-            result.scrollHandled = true;
-        }
-    } catch (e) {
-        console.error('Error restoring home page state:', e);
-        sessionStorage.removeItem(HOME_PAGE_STATE_KEY); // Clear corrupted state
-        result.scrollHandled = false; // Ensure flags are false on error
-        result.isCategoryView = false;
-    }
-    return result;
-}
-
-function saveFilterPageState() {
-    const pageFilter = document.getElementById('page-filter');
-    if (!pageFilter || pageFilter.classList.contains('hidden')) return;
-
-    const useOnlyOldApi = localStorage.getItem('doubanApiMode') === 'false';
-    let stateToSave;
-
-    if (useOnlyOldApi) {
-        if (typeof window.currentOldApiFilters === 'undefined') {
-            console.warn('currentOldApiFilters not found, cannot save old API filter state.');
-            return;
-        }
-        stateToSave = {
-            scrollTop: window.pageYOffset,
-            filters: JSON.parse(JSON.stringify(window.currentOldApiFilters)),
-            resultsHTML: document.getElementById('douban-filter-items-grid') ? document.getElementById('douban-filter-items-grid').innerHTML : '',
-            resultsCount: document.getElementById('doubanFilterResultsCount') ? document.getElementById('doubanFilterResultsCount').textContent : '0',
-            noMoreItems: window.noMoreSearchPageFilterItems || false,
-            mode: 'oldApi' // Indicate this state is for old API mode
-        };
-        console.log('Saving Old API Filter Page State:', stateToSave);
-    } else {
-        if (typeof window.currentSearchPageFilters === 'undefined') {
-            console.warn('currentSearchPageFilters not found, cannot save new API filter state.');
-            return;
-        }
-        stateToSave = {
-            scrollTop: window.pageYOffset,
-            filters: JSON.parse(JSON.stringify(window.currentSearchPageFilters)),
-            resultsHTML: document.getElementById('douban-filter-items-grid') ? document.getElementById('douban-filter-items-grid').innerHTML : '',
-            resultsCount: document.getElementById('doubanFilterResultsCount') ? document.getElementById('doubanFilterResultsCount').textContent : '0',
-            noMoreItems: window.noMoreSearchPageFilterItems || false,
-            mode: 'newApi' // Indicate this state is for new API mode
-        };
-        console.log('Saving New API Filter Page State:', stateToSave);
-    }
-    sessionStorage.setItem(FILTER_PAGE_STATE_KEY, JSON.stringify(stateToSave));
-}
-
-function restoreFilterPageState() {
-    const savedStateRaw = sessionStorage.getItem(FILTER_PAGE_STATE_KEY);
-    if (!savedStateRaw) return false; 
-
-    let scrollHandled = false; 
-    try {
-        const state = JSON.parse(savedStateRaw);
-        console.log('Restoring Filter Page State (mode:', state.mode, '):', state);
-        const useOnlyOldApi = localStorage.getItem('doubanApiMode') === 'false';
-
-        // Initialize controls first, which sets defaults.
-        // The init function will itself check the API mode.
-        if (typeof initDoubanFilterControls === 'function') {
-            initDoubanFilterControls('douban-filter-controls-area'); 
-        }
-
-        if (useOnlyOldApi && state.mode === 'oldApi') {
-            if (typeof window.currentOldApiFilters !== 'undefined' && state.filters) {
-                window.currentOldApiFilters = JSON.parse(JSON.stringify(state.filters));
-                window.noMoreSearchPageFilterItems = state.noMoreItems || false;
-                window.isLoadingSearchPageFilters = false;
-                // Re-initialize UI with restored filters to update button active states
-                if (typeof initOldApiFilterUIWithMatchedButtons === 'function') {
-                    initOldApiFilterUIWithMatchedButtons('douban-filter-controls-area');
-                }
-            } else {
-                console.warn('currentOldApiFilters not available or state.filters missing for old API filter state restoration.');
-            }
-        } else if (!useOnlyOldApi && state.mode === 'newApi') {
-            if (typeof window.currentSearchPageFilters !== 'undefined' && state.filters) {
-                window.currentSearchPageFilters = JSON.parse(JSON.stringify(state.filters));
-                window.noMoreSearchPageFilterItems = state.noMoreItems || false;
-                window.isLoadingSearchPageFilters = false;
-                if (typeof updateAllButtonActiveStates === 'function') {
-                    updateAllButtonActiveStates();
-                }
-            } else {
-                console.warn('currentSearchPageFilters not available or state.filters missing for new API filter state restoration.');
-            }
-        } else {
-            console.warn('Filter state mode mismatch or unknown mode. API mode is', useOnlyOldApi ? 'old' : 'new', 'but saved state mode is', state.mode);
-            // If modes mismatch, don't restore filters, let initDoubanFilterControls set defaults.
-            // But still try to restore HTML and scroll if they exist.
-        }
-
-        const resultsGrid = document.getElementById('douban-filter-items-grid');
-        if (resultsGrid && state.resultsHTML) {
-            resultsGrid.innerHTML = state.resultsHTML;
-        } else if (resultsGrid) {
-            resultsGrid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">请选择筛选条件</p>';
-        }
-
-        const countEl = document.getElementById('doubanFilterResultsCount');
-        if (countEl && state.resultsCount) {
-            countEl.textContent = state.resultsCount;
-        }
-        
-        if (typeof state.scrollTop === 'number') {
-            window.scrollTo(0, state.scrollTop);
-            scrollHandled = true;
-        }
-
-    } catch (e) {
-        console.error('Error restoring filter page state:', e);
-        sessionStorage.removeItem(FILTER_PAGE_STATE_KEY); // Clear corrupted state
-        scrollHandled = false;
-    }
-    return scrollHandled; 
-}
-
-
-function saveCurrentPageState(pageId) {
-    if (pageId === 'home') {
-        saveHomePageState();
-    } else if (pageId === 'filter') {
-        saveFilterPageState();
-    }
-}
-
-// This function will now return an object for home, and a boolean for filter
-function restoreNewPageState(pageId) {
-    if (pageId === 'home') {
-        return restoreHomePageState(); // Returns { scrollHandled: boolean, isCategoryView: boolean }
-    } else if (pageId === 'filter') {
-        // To keep the structure consistent for how 'restored' is used for 'home',
-        // let's make restoreFilterPageState also return an object, though isCategoryView is not applicable.
-        const filterScrollHandled = restoreFilterPageState();
-        return { scrollHandled: filterScrollHandled, isCategoryView: false };
-    }
-    return { scrollHandled: false, isCategoryView: false }; // Default for other pages or if no specific restoration
-}
-
-// Navigation Tab Switching
-function navigateToTab(pageId) {
-    const previousPageId = getCurrentPageId(); // Get current page ID before changing anything
-    if (previousPageId && previousPageId !== pageId) { // Only save if navigating away
-        saveCurrentPageState(previousPageId);
-    }
-
-    // Hide all page content
-    document.querySelectorAll('.page-content').forEach(page => {
-        page.classList.add('hidden');
-    });
-
-    // Show the selected page content (default behavior)
-    const targetPage = document.getElementById(`page-${pageId}`);
-    if (targetPage) {
-        targetPage.classList.remove('hidden');
-    }
-
-    // Update active state for nav items (default behavior)
-    document.querySelectorAll('#bottomNav .nav-item').forEach(item => {
-        item.classList.remove('active');
-        if (item.dataset.page === pageId) {
-            item.classList.add('active');
-        }
-    });
-    
-    sessionStorage.setItem('activeTab', pageId); // Store the new active tab
-
-    let restorationResult = { scrollHandled: false, isCategoryView: false };
-
-    if (pageId === 'home' || pageId === 'filter') {
-        restorationResult = restoreNewPageState(pageId);
-    }
-
-    // Ensure correct page visibility based on restoration result for home page
-    if (pageId === 'home') {
-        const pageHome = document.getElementById('page-home');
-        const categoryView = document.getElementById('page-category-view');
-        if (restorationResult.isCategoryView) {
-            if (pageHome) pageHome.classList.add('hidden');
-            if (categoryView) categoryView.classList.remove('hidden');
-            // Ensure 'home' nav item is active
-            document.querySelectorAll('#bottomNav .nav-item').forEach(item => {
-                item.classList.remove('active');
-                if (item.dataset.page === 'home') item.classList.add('active');
-            });
-        } else {
-            if (pageHome) pageHome.classList.remove('hidden');
-            if (categoryView) categoryView.classList.add('hidden');
-        }
-    }
-
-
-    // Special handling for certain tabs AFTER state restoration attempt
-    if (pageId === 'history') {
-        loadViewingHistory(); 
-    } else if (pageId === 'filter' && !restorationResult.scrollHandled) { 
-        // If filter state wasn't restored (scrollHandled would be false)
-        if (typeof initDoubanFilterControls === 'function') {
-            initDoubanFilterControls('douban-filter-controls-area'); 
-        }
-        if (typeof applySearchPageFilters === 'function') {
-            applySearchPageFilters(); 
-        }
-    } else if (pageId === 'home' && !restorationResult.scrollHandled && !restorationResult.isCategoryView) { 
-        // If home state wasn't restored AND it wasn't restored to category view, init main home.
-        // This case is hit when homePageState was cleared (e.g., by API mode change),
-        // so restorationResult.forceMainView should be true.
-        const pageHome = document.getElementById('page-home');
-        const categoryView = document.getElementById('page-category-view');
-        if (pageHome) pageHome.classList.remove('hidden'); // Ensure main home is visible
-        if (categoryView) categoryView.classList.add('hidden'); // Ensure category view is hidden
-
-        // Explicitly reset category view globals to prevent accidental re-entry or display of stale category view
-        if (typeof window !== 'undefined') {
-            window.currentCategoryViewTag = '';
-            window.currentCategoryViewType = '';
-            window.currentCategorySourceConfig = null;
-        }
-        
-        if (typeof initDouban === 'function') { 
-            // Pass the restorationResult which contains forceMainView
-            initDouban({ forceMainView: restorationResult.forceMainView }); 
-        }
-    }
-    // For other pages like 'search', 'settings', they re-initialize or don't need complex state.
-
-    if (!restorationResult.scrollHandled) {
-        window.scrollTo(0, 0);
-    }
-}
-
-// Initialize navigation and set up event listeners for nav items
-function initializeNavigation() {
-    const navItems = document.querySelectorAll('#bottomNav .nav-item');
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const pageId = item.dataset.page;
-            if (pageId === 'home') {
-                // If Home button is clicked, always force a reset to the main home view
-                sessionStorage.removeItem(HOME_PAGE_STATE_KEY); 
-                // Also clear Douban API caches to ensure fresh data if API mode changed elsewhere
-                for (let i = 0; i < sessionStorage.length; i++) {
-                    const key = sessionStorage.key(i);
-                    if (key && key.startsWith('douban_api_cache_')) {
-                        sessionStorage.removeItem(key);
-                        i--; 
-                    }
-                }
-            }
-            navigateToTab(pageId);
+        sessionStorage.setItem("previousTab", "home");
+        document.querySelectorAll("#bottomNav .nav-item").forEach((item) => {
+          item.classList.remove("active");
+          if (item.dataset.page === "home") {
+            item.classList.add("active");
+          }
         });
-    });
-
-    // Restore active tab from sessionStorage or default to 'home'
-    const activeTab = sessionStorage.getItem('activeTab') || 'home';
-    navigateToTab(activeTab);
-}
-
-// Call initializeNavigation when the DOM is ready
-document.addEventListener('DOMContentLoaded', initializeNavigation);
-
-
-// 清除本地存储缓存并刷新页面
-function clearLocalStorage() {
-    // 确保模态框在页面上只有一个实例
-    let modal = document.getElementById('messageBoxModal');
-    if (modal) {
-        document.body.removeChild(modal);
+        sessionStorage.setItem("activeTab", "home");
+      } else {
+        console.warn("State incomplete for category view restoration. Tag or SourceConfig missing.");
+        const pageHome = document.getElementById("page-home");
+        if (pageHome) pageHome.classList.remove("hidden");
+        if (categoryViewPage) categoryViewPage.classList.add("hidden");
+        if (typeof initHomePageDoubanContent === "function") {
+          initHomePageDoubanContent();
+        }
+        result.isCategoryView = false;
+        return result;
+      }
+    } else {
+      result.isCategoryView = false;
+      const pageHome = document.getElementById("page-home");
+      const categoryViewPage = document.getElementById("page-category-view");
+      if (pageHome) pageHome.classList.remove("hidden");
+      if (categoryViewPage) categoryViewPage.classList.add("hidden");
+      const recommendationsContainer = document.getElementById("douban-recommendations-container");
+      if (recommendationsContainer && state.homePageHTML) {
+        recommendationsContainer.innerHTML = state.homePageHTML;
+        window.homePageCurrentTagIndex = state.homePageCurrentTagIndex;
+        window.homePageActiveTags = state.homePageActiveTags;
+        window.noMoreHomePageTags = state.noMoreHomePageTags;
+        window.isLoadingHomePageItems = false;
+        let bottomSpinner = document.getElementById("home-page-bottom-spinner");
+        if (state.homePageHTML.includes("home-page-bottom-spinner") && !state.noMoreHomePageTags) {
+          if (!bottomSpinner && recommendationsContainer) {
+            bottomSpinner = document.createElement("div");
+            bottomSpinner.id = "home-page-bottom-spinner";
+            bottomSpinner.className = "col-span-full text-center py-4";
+            recommendationsContainer.appendChild(bottomSpinner);
+          }
+          if (bottomSpinner) {
+            bottomSpinner.innerHTML = '<p class="text-gray-400">正在加载更多推荐...</p>';
+            bottomSpinner.style.display = "block";
+          }
+        } else if (bottomSpinner && state.noMoreHomePageTags) {
+          bottomSpinner.innerHTML = '<p class="text-gray-500">已加载全部推荐内容</p>';
+        } else if (bottomSpinner) {
+          bottomSpinner.style.display = "none";
+        }
+      } else {
+        if (typeof initHomePageDoubanContent === "function") {
+          initHomePageDoubanContent();
+        }
+      }
     }
-
-    // 创建模态框元素
-    modal = document.createElement('div');
-    modal.id = 'messageBoxModal';
-    modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40';
-
-    modal.innerHTML = `
+    if (typeof state.scrollTop === "number") {
+      window.scrollTo(0, state.scrollTop);
+      result.scrollHandled = true;
+    }
+  } catch (e) {
+    console.error("Error restoring home page state:", e);
+    sessionStorage.removeItem(HOME_PAGE_STATE_KEY);
+    result.scrollHandled = false;
+    result.isCategoryView = false;
+  }
+  return result;
+}
+function saveFilterPageState() {
+  const pageFilter = document.getElementById("page-filter");
+  if (!pageFilter || pageFilter.classList.contains("hidden")) return;
+  const useOnlyOldApi = localStorage.getItem("doubanApiMode") === "false";
+  let stateToSave;
+  if (useOnlyOldApi) {
+    if (typeof window.currentOldApiFilters === "undefined") {
+      console.warn("currentOldApiFilters not found, cannot save old API filter state.");
+      return;
+    }
+    stateToSave = {
+      scrollTop: window.pageYOffset,
+      filters: JSON.parse(JSON.stringify(window.currentOldApiFilters)),
+      resultsHTML: document.getElementById("douban-filter-items-grid") ? document.getElementById("douban-filter-items-grid").innerHTML : "",
+      resultsCount: document.getElementById("doubanFilterResultsCount") ? document.getElementById("doubanFilterResultsCount").textContent : "0",
+      noMoreItems: window.noMoreSearchPageFilterItems || false,
+      mode: "oldApi"
+      // Indicate this state is for old API mode
+    };
+    console.log("Saving Old API Filter Page State:", stateToSave);
+  } else {
+    if (typeof window.currentSearchPageFilters === "undefined") {
+      console.warn("currentSearchPageFilters not found, cannot save new API filter state.");
+      return;
+    }
+    stateToSave = {
+      scrollTop: window.pageYOffset,
+      filters: JSON.parse(JSON.stringify(window.currentSearchPageFilters)),
+      resultsHTML: document.getElementById("douban-filter-items-grid") ? document.getElementById("douban-filter-items-grid").innerHTML : "",
+      resultsCount: document.getElementById("doubanFilterResultsCount") ? document.getElementById("doubanFilterResultsCount").textContent : "0",
+      noMoreItems: window.noMoreSearchPageFilterItems || false,
+      mode: "newApi"
+      // Indicate this state is for new API mode
+    };
+    console.log("Saving New API Filter Page State:", stateToSave);
+  }
+  sessionStorage.setItem(FILTER_PAGE_STATE_KEY, JSON.stringify(stateToSave));
+}
+function restoreFilterPageState() {
+  const savedStateRaw = sessionStorage.getItem(FILTER_PAGE_STATE_KEY);
+  if (!savedStateRaw) return false;
+  let scrollHandled = false;
+  try {
+    const state = JSON.parse(savedStateRaw);
+    console.log("Restoring Filter Page State (mode:", state.mode, "):", state);
+    const useOnlyOldApi = localStorage.getItem("doubanApiMode") === "false";
+    if (typeof initDoubanFilterControls === "function") {
+      initDoubanFilterControls("douban-filter-controls-area");
+    }
+    if (useOnlyOldApi && state.mode === "oldApi") {
+      if (typeof window.currentOldApiFilters !== "undefined" && state.filters) {
+        window.currentOldApiFilters = JSON.parse(JSON.stringify(state.filters));
+        window.noMoreSearchPageFilterItems = state.noMoreItems || false;
+        window.isLoadingSearchPageFilters = false;
+        if (typeof initOldApiFilterUIWithMatchedButtons === "function") {
+          initOldApiFilterUIWithMatchedButtons("douban-filter-controls-area");
+        }
+      } else {
+        console.warn("currentOldApiFilters not available or state.filters missing for old API filter state restoration.");
+      }
+    } else if (!useOnlyOldApi && state.mode === "newApi") {
+      if (typeof window.currentSearchPageFilters !== "undefined" && state.filters) {
+        window.currentSearchPageFilters = JSON.parse(JSON.stringify(state.filters));
+        window.noMoreSearchPageFilterItems = state.noMoreItems || false;
+        window.isLoadingSearchPageFilters = false;
+        if (typeof updateAllButtonActiveStates === "function") {
+          updateAllButtonActiveStates();
+        }
+      } else {
+        console.warn("currentSearchPageFilters not available or state.filters missing for new API filter state restoration.");
+      }
+    } else {
+      console.warn("Filter state mode mismatch or unknown mode. API mode is", useOnlyOldApi ? "old" : "new", "but saved state mode is", state.mode);
+    }
+    const resultsGrid = document.getElementById("douban-filter-items-grid");
+    if (resultsGrid && state.resultsHTML) {
+      resultsGrid.innerHTML = state.resultsHTML;
+    } else if (resultsGrid) {
+      resultsGrid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">请选择筛选条件</p>';
+    }
+    const countEl = document.getElementById("doubanFilterResultsCount");
+    if (countEl && state.resultsCount) {
+      countEl.textContent = state.resultsCount;
+    }
+    if (typeof state.scrollTop === "number") {
+      window.scrollTo(0, state.scrollTop);
+      scrollHandled = true;
+    }
+  } catch (e) {
+    console.error("Error restoring filter page state:", e);
+    sessionStorage.removeItem(FILTER_PAGE_STATE_KEY);
+    scrollHandled = false;
+  }
+  return scrollHandled;
+}
+function saveCurrentPageState(pageId) {
+  if (pageId === "home") {
+    saveHomePageState();
+  } else if (pageId === "filter") {
+    saveFilterPageState();
+  }
+}
+function restoreNewPageState(pageId) {
+  if (pageId === "home") {
+    return restoreHomePageState();
+  } else if (pageId === "filter") {
+    const filterScrollHandled = restoreFilterPageState();
+    return { scrollHandled: filterScrollHandled, isCategoryView: false };
+  }
+  return { scrollHandled: false, isCategoryView: false };
+}
+function navigateToTab(pageId) {
+  const previousPageId = getCurrentPageId();
+  if (previousPageId && previousPageId !== pageId) {
+    saveCurrentPageState(previousPageId);
+  }
+  document.querySelectorAll(".page-content").forEach((page) => {
+    page.classList.add("hidden");
+  });
+  const targetPage = document.getElementById(`page-${pageId}`);
+  if (targetPage) {
+    targetPage.classList.remove("hidden");
+  }
+  document.querySelectorAll("#bottomNav .nav-item").forEach((item) => {
+    item.classList.remove("active");
+    if (item.dataset.page === pageId) {
+      item.classList.add("active");
+    }
+  });
+  sessionStorage.setItem("activeTab", pageId);
+  let restorationResult = { scrollHandled: false, isCategoryView: false };
+  if (pageId === "home" || pageId === "filter") {
+    restorationResult = restoreNewPageState(pageId);
+  }
+  if (pageId === "home") {
+    const pageHome = document.getElementById("page-home");
+    const categoryView = document.getElementById("page-category-view");
+    if (restorationResult.isCategoryView) {
+      if (pageHome) pageHome.classList.add("hidden");
+      if (categoryView) categoryView.classList.remove("hidden");
+      document.querySelectorAll("#bottomNav .nav-item").forEach((item) => {
+        item.classList.remove("active");
+        if (item.dataset.page === "home") item.classList.add("active");
+      });
+    } else {
+      if (pageHome) pageHome.classList.remove("hidden");
+      if (categoryView) categoryView.classList.add("hidden");
+    }
+  }
+  if (pageId === "history") {
+    loadViewingHistory();
+  } else if (pageId === "filter" && !restorationResult.scrollHandled) {
+    if (typeof initDoubanFilterControls === "function") {
+      initDoubanFilterControls("douban-filter-controls-area");
+    }
+    if (typeof applySearchPageFilters === "function") {
+      applySearchPageFilters();
+    }
+  } else if (pageId === "home" && !restorationResult.scrollHandled && !restorationResult.isCategoryView) {
+    const pageHome = document.getElementById("page-home");
+    const categoryView = document.getElementById("page-category-view");
+    if (pageHome) pageHome.classList.remove("hidden");
+    if (categoryView) categoryView.classList.add("hidden");
+    if (typeof window !== "undefined") {
+      window.currentCategoryViewTag = "";
+      window.currentCategoryViewType = "";
+      window.currentCategorySourceConfig = null;
+    }
+    if (typeof initDouban === "function") {
+      initDouban({ forceMainView: restorationResult.forceMainView });
+    }
+  }
+  if (!restorationResult.scrollHandled) {
+    window.scrollTo(0, 0);
+  }
+}
+function initializeNavigation() {
+  const navItems = document.querySelectorAll("#bottomNav .nav-item");
+  navItems.forEach((item) => {
+    item.addEventListener("click", () => {
+      const pageId = item.dataset.page;
+      if (pageId === "home") {
+        sessionStorage.removeItem(HOME_PAGE_STATE_KEY);
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key && key.startsWith("douban_api_cache_")) {
+            sessionStorage.removeItem(key);
+            i--;
+          }
+        }
+      }
+      navigateToTab(pageId);
+    });
+  });
+  const activeTab = sessionStorage.getItem("activeTab") || "home";
+  navigateToTab(activeTab);
+}
+document.addEventListener("DOMContentLoaded", initializeNavigation);
+function clearLocalStorage() {
+  let modal = document.getElementById("messageBoxModal");
+  if (modal) {
+    document.body.removeChild(modal);
+  }
+  modal = document.createElement("div");
+  modal.id = "messageBoxModal";
+  modal.className = "fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40";
+  modal.innerHTML = `
         <div class="bg-[#191919] rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
             <button id="closeBoxModal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&times;</button>
             
@@ -1087,30 +790,20 @@ function clearLocalStorage() {
                 </div>
             </div>
         </div>`;
-
-    // 添加模态框到页面
-    document.body.appendChild(modal);
-
-    // 添加事件监听器 - 关闭按钮
-    document.getElementById('closeBoxModal').addEventListener('click', function () {
-        document.body.removeChild(modal);
-    });
-
-    // 添加事件监听器 - 确定按钮
-    document.getElementById('confirmBoxModal').addEventListener('click', function () {
-        // 清除所有localStorage数据
-        localStorage.clear();
-        
-        // 清除所有cookie
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i];
-            const eqPos = cookie.indexOf("=");
-            const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
-            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-        }
-        
-        modal.innerHTML = `
+  document.body.appendChild(modal);
+  document.getElementById("closeBoxModal").addEventListener("click", function() {
+    document.body.removeChild(modal);
+  });
+  document.getElementById("confirmBoxModal").addEventListener("click", function() {
+    localStorage.clear();
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i];
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    }
+    modal.innerHTML = `
             <div class="bg-[#191919] rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
                 <button id="closeBoxModal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&times;</button>
                 
@@ -1120,38 +813,28 @@ function clearLocalStorage() {
                     <div class="text-sm font-medium text-gray-300 mb-4">页面缓存和Cookie已清除，3 秒后自动刷新本页面。</div>
                 </div>
             </div>`;
-        setTimeout(() => {
-            window.location.reload();
-        }, 3000);
-    });
-
-    // 添加事件监听器 - 取消按钮
-    document.getElementById('cancelBoxModal').addEventListener('click', function () {
-        document.body.removeChild(modal);
-    });
-
-    // 添加事件监听器 - 点击模态框外部关闭
-    modal.addEventListener('click', function (e) {
-        if (e.target === modal) {
-            document.body.removeChild(modal);
-        }
-    });
-}
-
-// 显示配置文件导入页面
-function showImportBox(fun) {
-    // 确保模态框在页面上只有一个实例
-    let modal = document.getElementById('showImportBoxModal');
-    if (modal) {
-        document.body.removeChild(modal);
+    setTimeout(() => {
+      window.location.reload();
+    }, 3e3);
+  });
+  document.getElementById("cancelBoxModal").addEventListener("click", function() {
+    document.body.removeChild(modal);
+  });
+  modal.addEventListener("click", function(e) {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
     }
-
-    // 创建模态框元素
-    modal = document.createElement('div');
-    modal.id = 'showImportBoxModal';
-    modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40';
-
-    modal.innerHTML = `
+  });
+}
+function showImportBox(fun) {
+  let modal = document.getElementById("showImportBoxModal");
+  if (modal) {
+    document.body.removeChild(modal);
+  }
+  modal = document.createElement("div");
+  modal.id = "showImportBoxModal";
+  modal.className = "fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-40";
+  modal.innerHTML = `
         <div class="bg-[#191919] rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto relative">
             <button id="closeBoxModal" class="absolute top-4 right-4 text-gray-400 hover:text-white text-xl">&times;</button>
             
@@ -1176,41 +859,29 @@ function showImportBox(fun) {
                 </div>
             </div>
         </div>`;
-
-    // 添加模态框到页面
-    document.body.appendChild(modal);
-
-    // 添加事件监听器 - 关闭按钮
-    document.getElementById('closeBoxModal').addEventListener('click', function () {
-        document.body.removeChild(modal);
-    });
-
-    // 添加事件监听器 - 点击模态框外部关闭
-    modal.addEventListener('click', function (e) {
-        if (e.target === modal) {
-            document.body.removeChild(modal);
-        }
-    });
-
-    // 添加事件监听器 - 拖拽文件
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('ChooseFile');
-
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.classList.add('border-blue-500');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.classList.remove('border-blue-500');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        fun(e.dataTransfer.files[0]);
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        fun(fileInput.files[0]);
-    });
+  document.body.appendChild(modal);
+  document.getElementById("closeBoxModal").addEventListener("click", function() {
+    document.body.removeChild(modal);
+  });
+  modal.addEventListener("click", function(e) {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+  const dropZone = document.getElementById("dropZone");
+  const fileInput = document.getElementById("ChooseFile");
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("border-blue-500");
+  });
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("border-blue-500");
+  });
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    fun(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", (e) => {
+    fun(fileInput.files[0]);
+  });
 }
