@@ -15,6 +15,10 @@
     `;
   document.head.appendChild(style);
 })();
+const VERSION_URL = {
+  PROXY: "https://raw.ihtw.moe/raw.githubusercontent.com/LibreSpark/LibreTV/main/VERSION.txt",
+  DIRECT: "https://raw.githubusercontent.com/LibreSpark/LibreTV/main/VERSION.txt"
+};
 async function fetchVersion(url, errorMessage, options = {}) {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -22,33 +26,55 @@ async function fetchVersion(url, errorMessage, options = {}) {
   }
   return await response.text();
 }
+async function fetchVersionViaTauri(url) {
+  const response = await tauriConstants.invoke("make_http_request", {
+    options: {
+      url,
+      method: "GET",
+      timeout_secs: tauriConstants.TIMEOUT_SECS,
+      response_as_text: true
+    }
+  });
+  if (!response || response.status < 200 || response.status >= 300) {
+    throw new Error(`Tauri version request failed with status ${response ? response.status : "unknown"}`);
+  }
+  return response.body;
+}
+async function resolveLatestVersion() {
+  if (isLikelyTauriEnvironment() && tauriConstants.invoke) {
+    try {
+      const latestVersion2 = await fetchVersionViaTauri(VERSION_URL.PROXY);
+      console.log("通过 Tauri 原生请求代理地址获取版本成功");
+      return latestVersion2;
+    } catch (proxyError) {
+      console.log("Tauri 代理请求失败，尝试 Tauri 直连:", proxyError.message);
+      const latestVersion2 = await fetchVersionViaTauri(VERSION_URL.DIRECT);
+      console.log("通过 Tauri 原生直连获取版本成功");
+      return latestVersion2;
+    }
+  }
+  try {
+    const latestVersion2 = await fetchVersion(VERSION_URL.PROXY, "代理请求失败");
+    console.log("通过代理服务器获取版本成功");
+    return latestVersion2;
+  } catch (proxyError) {
+    console.log("代理请求失败，尝试直接请求:", proxyError.message);
+    const latestVersion2 = await fetchVersion(VERSION_URL.DIRECT, "获取最新版本失败");
+    console.log("直接请求获取版本成功");
+    return latestVersion2;
+  }
+}
 async function checkForUpdates() {
   try {
     console.log("[VersionCheck] typeof window.APP_VERSION:", typeof window.APP_VERSION);
     console.log("[VersionCheck] window.APP_VERSION value:", window.APP_VERSION);
     const currentVersion = window.APP_VERSION || "unknown_local_version";
     let latestVersion;
-    const VERSION_URL = {
-      PROXY: "https://raw.ihtw.moe/raw.githubusercontent.com/LibreSpark/LibreTV/main/VERSION.txt",
-      DIRECT: "https://raw.githubusercontent.com/LibreSpark/LibreTV/main/VERSION.txt"
-    };
-    const FETCH_TIMEOUT = 1500;
     try {
-      const proxyPromise = fetchVersion(VERSION_URL.PROXY, "代理请求失败");
-      const timeoutPromise = new Promise(
-        (_, reject) => setTimeout(() => reject(new Error("代理请求超时")), FETCH_TIMEOUT)
-      );
-      latestVersion = await Promise.race([proxyPromise, timeoutPromise]);
-      console.log("通过代理服务器获取版本成功");
-    } catch (error) {
-      console.log("代理请求失败，尝试直接请求:", error.message);
-      try {
-        latestVersion = await fetchVersion(VERSION_URL.DIRECT, "获取最新版本失败");
-        console.log("直接请求获取版本成功");
-      } catch (directError) {
-        console.error("所有版本检查请求均失败:", directError);
-        throw new Error("无法获取最新版本信息");
-      }
+      latestVersion = await resolveLatestVersion();
+    } catch (versionError) {
+      console.error("所有版本检查请求均失败:", versionError);
+      throw new Error("无法获取最新版本信息");
     }
     console.log("当前版本:", currentVersion);
     console.log("最新版本:", latestVersion);
